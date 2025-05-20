@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疾病超声影像智能分级系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #6a7fef;
+            --primary-dark: #3a56d4;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --danger-color: #f94144;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #343a40;
+            --text-light: #7c7c7c;
+            --text-dark: #212529;
+            --bg-light: #ffffff;
+            --bg-dark: #1a1a2e;
+            --card-bg-light: #ffffff;
+            --card-bg-dark: #16213e;
+            --border-radius: 10px;
+            --box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="dark"] {
+            --light-gray: #2d3748;
+            --medium-gray: #4a5568;
+            --text-light: #7c7c7c;
+            --text-dark: #f8f9fa;
+            --bg-light: #1a1a2e;
+            --bg-dark: #0f0f1a;
+            --card-bg-light: #16213e;
+            --card-bg-dark: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            flex: 0 0 350px;
+            background: var(--card-bg-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--medium-gray);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            font-size: 1.2rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .control-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-label .info-icon {
+            color: var(--primary-color);
+            cursor: help;
+            font-size: 0.8rem;
+        }
+
+        /* 文件输入区域 */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-button {
+            width: 100%;
+            border: 2px dashed var(--medium-gray);
+            border-radius: var(--border-radius);
+            padding: 30px 15px;
+            text-align: center;
+            background-color: rgba(67, 97, 238, 0.05);
+            color: var(--text-dark);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-input-button:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-input-button i {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-name {
+            font-size: 0.85rem;
+            color: var(--medium-gray);
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        /* 下拉选择框 */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .model-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            background-color: var(--card-bg-light);
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            appearance: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .model-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .select-arrow {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--medium-gray);
+        }
+
+        /* 按钮样式 */
+        .run-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.2);
+        }
+
+        .run-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .run-button:active {
+            transform: translateY(0);
+        }
+
+        .run-button:disabled {
+            background-color: var(--medium-gray);
+            color: var(--text-dark);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 可视化面板 */
+        .visualization-panel {
+            flex: 1;
+            background: var(--card-bg-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container {
+            flex: 1;
+            min-height: 400px;
+            margin-top: 20px;
+            position: relative;
+            background: rgba(67, 97, 238, 0.03);
+            border-radius: var(--border-radius);
+            padding: 15px;
+        }
+
+        /* 信息显示区域 */
+        .selected-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(67, 97, 238, 0.05);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* 单选按钮组 */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .radio-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .radio-checkmark {
+            position: absolute;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: var(--card-bg-light);
+            border: 2px solid var(--medium-gray);
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .radio-option:hover .radio-checkmark {
+            border-color: var(--primary-color);
+        }
+
+        .radio-option input:checked ~ .radio-checkmark {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .radio-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .radio-option input:checked ~ .radio-checkmark:after {
+            display: block;
+        }
+
+        /* 输入框样式 */
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            background-color: var(--card-bg-light);
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            transition: var(--transition);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        /* 测试结果表格 */
+        #test-results-container {
+            overflow-x: auto;
+            max-height: 300px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            background: var(--card-bg-light);
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #test-results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #test-results-header th {
+            padding: 10px 15px;
+            text-align: left;
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+            border-bottom: 2px solid var(--medium-gray);
+        }
+
+        #test-results-body td {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--medium-gray);
+            color: var(--text-dark);
+        }
+
+        #test-results-body tr:hover td {
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 加载动画 */
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .control-panel {
+                flex: 1;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .control-panel, .visualization-panel {
+                padding: 15px;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        /* 高级卡片效果 */
+        .card {
+            background: var(--card-bg-light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            transition: var(--transition);
+            margin-bottom: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--medium-gray);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark-gray);
+            color: var(--text-light);
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .tag-primary {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+
+        .tag-success {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--success-color);
+        }
+
+        /* 模型性能指标 */
+        .metrics-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background: rgba(67, 97, 238, 0.05);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 5px 0;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--medium-gray);
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <!-- 左侧控制面板 -->
+        <div class="control-panel card">
+            <h2 class="panel-title">
+                <i class="fas fa-sliders-h"></i>
+                模型训练控制台
+            </h2>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-database"></i>
+                    选择训练数据集
+                    <span class="tooltip">
+                        <i class="fas fa-info-circle info-icon"></i>
+                        <span class="tooltiptext">请选择包含特征和标签的CSV或Excel文件</span>
+                    </span>
+                </label>
+                <div class="file-input-wrapper">
+                    <div class="file-input-button">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div>点击或拖放文件</div>
+                        <div class="file-name" id="file-name">未选择文件</div>
+                    </div>
+                    <input type="file" id="dataset-file" class="file-input" accept=".csv,.xlsx,.data">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-vial"></i>
+                    选择测试集（无label）
+                    <span class="tooltip">
+                        <i class="fas fa-info-circle info-icon"></i>
+                        <span class="tooltiptext">选择需要预测的测试集文件（CSV格式）</span>
+                    </span>
+                </label>
+                <div class="file-input-wrapper">
+                    <div class="file-input-button">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div>点击或拖放测试文件</div>
+                        <div class="file-name" id="test-file-name">未选择测试集</div>
+                    </div>
+                    <input type="file" id="test-file" class="file-input" accept=".csv">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-project-diagram"></i>
+                    选择机器学习模型
+                </label>
+                <div class="select-wrapper">
+                    <select id="model-select" class="model-select">
+                        <option value="" disabled selected>请选择模型</option>
+                        <option value="logistic">Logistic Regression</option>
+                        <option value="randomforest">Random Forest</option>
+                        <!-- <option value="svm">Support Vector Machine</option> -->
+                        <!-- <option value="xgboost">XGBoost</option> -->
+                    </select>
+                    <div class="select-arrow">▼</div>
+                </div>
+            </div>
+            
+            <div id="regularization-options" class="control-group" style="display: none;">
+                <label class="control-label">
+                    <i class="fas fa-tape"></i>
+                    正则化方式
+                </label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="regularization" value="l1" checked>
+                        <span class="radio-checkmark"></span>
+                        L1正则化
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="regularization" value="l2">
+                        <span class="radio-checkmark"></span>
+                        L2正则化
+                    </label>
+                </div>
+            </div>
+            
+            <div id="hyperparams-options" class="control-group" style="display: none;">
+                <label class="control-label">
+                    <i class="fas fa-tune"></i>
+                    超参数设置
+                </label>
+                <div class="control-group">
+                    <label class="control-label">树的数量 (n_estimators)</label>
+                    <input type="range" id="n-estimators" min="10" max="500" value="100" class="input-field">
+                    <div class="progress-container">
+                        <div class="progress-bar" id="n-estimators-value" style="width: 20%"></div>
+                    </div>
+                    <span id="n-estimators-display">100</span>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">最大深度 (max_depth)</label>
+                    <input type="range" id="max-depth" min="1" max="20" value="5" class="input-field">
+                    <div class="progress-container">
+                        <div class="progress-bar" id="max-depth-value" style="width: 25%"></div>
+                    </div>
+                    <span id="max-depth-display">5</span>
+                </div>
+            </div>
+            
+            <button id="run-model" class="run-button">
+                <i class="fas fa-play"></i>
+                训练并预测
+            </button>
+            
+            <div class="selected-info fade-in">
+                <div><span class="info-label"><i class="fas fa-database"></i> 当前数据集:</span> <span id="current-dataset">无</span></div>
+                <div><span class="info-label"><i class="fas fa-project-diagram"></i> 当前模型:</span> <span id="current-model">未选择</span></div>
+                <div><span class="info-label"><i class="fas fa-info-circle"></i> 状态:</span> <span id="model-status">就绪</span></div>
+            </div>
+            
+            <div class="metrics-container" id="metrics-container" style="display: none;">
+                <div class="metric-card">
+                    <div class="metric-label">训练准确率</div>
+                    <div class="metric-value" id="train-accuracy">0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">验证准确率</div>
+                    <div class="metric-value" id="val-accuracy">0.00%</div>
+                </div>
+                <!-- <div class="metric-card">
+                    <div class="metric-label">F1分数</div>
+                    <div class="metric-value" id="f1-score">0.00</div>
+                </div> -->
+            </div>
+        </div>
+        
+        <!-- 右侧可视化面板 -->
+        <div class="visualization-panel card">
+            <h2 class="panel-title">
+                <i class="fas fa-chart-line"></i>
+                模型性能分析
+            </h2>
+            
+            <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="tab-button active" data-tab="learning-curve">学习曲线</button>
+                <button class="tab-button" data-tab="confusion-matrix">混淆矩阵</button>
+                <button class="tab-button" data-tab="feature-importance">特征重要性</button>
+            </div>
+            
+            <div class="chart-container" id="learning-curve-tab">
+                <canvas id="model-chart"></canvas>
+            </div>
+            
+            <div class="chart-container" id="confusion-matrix-tab" style="display: none;">
+                <canvas id="confusion-matrix-chart"></canvas>
+            </div>
+            
+            <div class="chart-container" id="feature-importance-tab" style="display: none;">
+                <canvas id="feature-importance-chart"></canvas>
+            </div>
+            
+            <h3 class="panel-title" style="margin-top: 20px;">
+                <i class="fas fa-table"></i>
+                测试集预测结果
+            </h3>
+            
+            <div id="test-results-container">
+                <table id="test-results-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr id="test-results-header"></tr>
+                    </thead>
+                    <tbody id="test-results-body"></tbody>
+                </table>
+            </div>
+            
+            <div class="control-group" style="margin-top: 20px;">
+                <button id="export-results" class="run-button" style="background-color: var(--success-color);">
+                    <i class="fas fa-file-export"></i>
+                    导出预测结果
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Radiomics特征提取部分 -->
+    <div class="container" style="margin-top: 20px;">
+        <div class="visualization-panel card" style="width: 100%;">
+            <h2 class="panel-title">
+                <i class="fas fa-microscope"></i>
+                Radiomics特征提取
+            </h2>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-folder-open"></i>
+                    图像目录路径
+                    <span class="tooltip">
+                        <i class="fas fa-info-circle info-icon"></i>
+                        <span class="tooltiptext">包含原始图像和掩膜的目录路径，不得有中文路径</span>
+                    </span>
+                </label>
+                <input type="text" id="base-path-input" class="input-field" placeholder="例如：E:/dachuang/Radiomics/Data/Test">
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-file-csv"></i>
+                    CSV保存路径
+                    <span class="tooltip">
+                        <i class="fas fa-info-circle info-icon"></i>
+                        <span class="tooltiptext">提取的特征将保存到此CSV文件</span>
+                    </span>
+                </label>
+                <input type="text" id="output-path-input" class="input-field" placeholder="例如：E:/dachuang/Radiomics/Data/extracted_features.csv">
+            </div>
+            
+            <button id="extract-button" class="run-button">
+                <i class="fas fa-cogs"></i>
+                提取Radiomics特征
+            </button>
+            
+            <div class="progress-container" id="extract-progress" style="display: none; margin-top: 15px;">
+                <div class="progress-bar" id="extract-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div id="extract-status" class="selected-info" style="display: none; margin-top: 15px;">
+                <div><span class="info-label"><i class="fas fa-info-circle"></i> 状态:</span> <span id="extract-status-text">准备中...</span></div>
+                <div><span class="info-label"><i class="fas fa-clock"></i> 已处理:</span> <span id="extract-processed">0</span> / <span id="extract-total">0</span> 图像</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 主题切换功能
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+    
+    // 检查本地存储中的主题偏好
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    body.setAttribute('data-theme', currentTheme);
+    updateThemeIcon(currentTheme);
+    
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+        
+        // 添加动画效果
+        anime({
+            targets: themeToggle,
+            scale: [1, 1.2, 1],
+            duration: 500,
+            easing: 'easeInOutQuad'
+        });
+    });
+    
+    function updateThemeIcon(theme) {
+        const icon = themeToggle.querySelector('i');
+        if (theme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+    
+    // 初始化图表
+    const ctx = document.getElementById('model-chart').getContext('2d');
+    const confusionCtx = document.getElementById('confusion-matrix-chart').getContext('2d');
+    const featureCtx = document.getElementById('feature-importance-chart').getContext('2d');
+    
+    const modelChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '模型学习曲线',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1,
+                    title: {
+                        display: true,
+                        text: '准确率'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: '训练样本比例/树的数量'
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuad'
+            }
+        }
+    });
+    
+    const confusionChart = new Chart(confusionCtx, {
+        type: 'bar',
+        data: {
+            labels: ['True Negative', 'False Positive', 'False Negative', 'True Positive'],
+            datasets: [{
+                label: '混淆矩阵',
+                data: [0, 0, 0, 0],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(75, 192, 192, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '混淆矩阵',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '数量'
+                    }
+                }
+            }
+        }
+    });
+    
+    const featureChart = new Chart(featureCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '特征重要性',
+                data: [],
+                backgroundColor: 'rgba(67, 97, 238, 0.6)',
+                borderColor: 'rgba(67, 97, 238, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                title: {
+                    display: true,
+                    text: '特征重要性',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '重要性分数'
+                    }
+                }
+            }
+        }
+    });
+    
+    // 标签切换功能
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            // 移除所有active类
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 添加active类到当前按钮
+            button.classList.add('active');
+            
+            // 隐藏所有标签内容
+            document.querySelectorAll('.chart-container').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 显示当前标签内容
+            const tabId = button.getAttribute('data-tab') + '-tab';
+            document.getElementById(tabId).style.display = 'block';
+        });
+    });
+    
+    // 模型选择逻辑
+    document.getElementById('model-select').addEventListener('change', function() {
+        const selectedModel = this.value;
+        const regularizationGroup = document.getElementById('regularization-options');
+        const hyperparamsGroup = document.getElementById('hyperparams-options');
+        
+        // 更新当前模型显示
+        let modelName = '';
+        switch(selectedModel) {
+            case 'logistic':
+                modelName = 'Logistic Regression';
+                regularizationGroup.style.display = 'block';
+                hyperparamsGroup.style.display = 'none';
+                break;
+            case 'randomforest':
+                modelName = 'Random Forest';
+                regularizationGroup.style.display = 'none';
+                hyperparamsGroup.style.display = 'block';
+                break;
+            // case 'svm':
+            //     modelName = 'Support Vector Machine';
+            //     regularizationGroup.style.display = 'block';
+            //     hyperparamsGroup.style.display = 'none';
+            //     break;
+            // case 'xgboost':
+            //     modelName = 'XGBoost';
+            //     regularizationGroup.style.display = 'none';
+            //     hyperparamsGroup.style.display = 'block';
+            //     break;
+            default:
+                modelName = '未选择';
+                regularizationGroup.style.display = 'none';
+                hyperparamsGroup.style.display = 'none';
+        }
+        
+        document.getElementById('current-model').textContent = modelName;
+        
+        // 添加动画效果
+        anime({
+            targets: '#current-model',
+            scale: [1.1, 1],
+            duration: 500,
+            easing: 'easeOutExpo'
+        });
+    });
+    
+    // 滑块控制
+    document.getElementById('n-estimators').addEventListener('input', function() {
+        const value = this.value;
+        const percentage = (value / 500) * 100;
+        document.getElementById('n-estimators-value').style.width = `${percentage}%`;
+        document.getElementById('n-estimators-display').textContent = value;
+    });
+    
+    document.getElementById('max-depth').addEventListener('input', function() {
+        const value = this.value;
+        const percentage = (value / 20) * 100;
+        document.getElementById('max-depth-value').style.width = `${percentage}%`;
+        document.getElementById('max-depth-display').textContent = value;
+    });
+    
+    // 文件上传处理
+    const datasetFileInput = document.getElementById('dataset-file');
+    const testFileInput = document.getElementById('test-file');
+    const fileNameDisplay = document.getElementById('file-name');
+    const testFileNameDisplay = document.getElementById('test-file-name');
+    const currentDatasetDisplay = document.getElementById('current-dataset');
+    const runButton = document.getElementById('run-model');
+    
+    datasetFileInput.addEventListener('change', async function(e) {
+        if (this.files.length > 0) {
+            const file = this.files[0];
+            fileNameDisplay.textContent = file.name;
+            
+            // 显示加载动画
+            currentDatasetDisplay.innerHTML = `<span class="loader"></span> 分析数据集中...`;
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    currentDatasetDisplay.textContent = `${result.filename} (${result.sample_size} 样本, ${result.features} 特征)`;
+                    
+                    // 添加成功动画
+                    anime({
+                        targets: currentDatasetDisplay,
+                        color: ['#4361ee', '#333'],
+                        duration: 1000
+                    });
+                } else {
+                    throw new Error(result.error || '上传失败');
+                }
+            } catch (error) {
+                console.error('上传错误:', error);
+                fileNameDisplay.textContent = '上传失败';
+                currentDatasetDisplay.textContent = '无';
+                
+                // 添加错误动画
+                anime({
+                    targets: [fileNameDisplay, currentDatasetDisplay],
+                    color: ['#f94144', '#333'],
+                    duration: 1000
+                });
+            }
+        }
+    });
+    
+    testFileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            testFileNameDisplay.textContent = this.files[0].name;
+        } else {
+            testFileNameDisplay.textContent = '未选择测试集';
+        }
+    });
+    
+    // 模型训练处理
+    runButton.addEventListener('click', async function() {
+        if (!datasetFileInput.files.length || !testFileInput.files.length) {
+            showAlert('请先选择训练集和测试集文件', 'warning');
+            return;
+        }
+        
+        if (!document.getElementById('model-select').value) {
+            showAlert('请选择模型', 'warning');
+            return;
+        }
+        
+        const modelType = document.getElementById('model-select').value;
+        const regularization = document.querySelector('input[name="regularization"]:checked')?.value || 'l2';
+        const nEstimators = document.getElementById('n-estimators')?.value || 100;
+        const maxDepth = document.getElementById('max-depth')?.value || 5;
+        
+        // 更新UI状态
+        runButton.disabled = true;
+        runButton.innerHTML = '<span class="loader"></span> 训练中...';
+        document.getElementById('model-status').textContent = '训练中...';
+        
+        try {
+            // 1. 上传训练集
+            const formDataTrain = new FormData();
+            formDataTrain.append('file', datasetFileInput.files[0]);
+            
+            const uploadRes = await fetch('/upload', {
+                method: 'POST',
+                body: formDataTrain
+            });
+            
+            const uploadResult = await uploadRes.json();
+            if (!uploadRes.ok) throw new Error(uploadResult.error || '训练集上传失败');
+            
+            // 2. 发起训练请求
+            const trainRes = await fetch('/train', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model_type: modelType,
+                    regularization: regularization,
+                    n_estimators: nEstimators,
+                    max_depth: maxDepth
+                })
+            });
+            
+            const trainResult = await trainRes.json();
+            if (!trainRes.ok) throw new Error(trainResult.error || '训练失败');
+            
+            // 显示训练结果
+            showAlert(`✅ 模型训练完成！<br>训练集准确率: ${(trainResult.train_accuracy * 100).toFixed(2)}%<br>验证集准确率: ${(trainResult.val_accuracy * 100).toFixed(2)}%`, 'success');
+            
+            // 更新图表
+            updateLearningCurveChart(trainResult.learning_curve);
+            
+            // 更新混淆矩阵
+            if (trainResult.confusion_matrix) {
+                updateConfusionMatrix(trainResult.confusion_matrix);
+            }
+            
+            // 更新特征重要性
+            if (trainResult.feature_importance) {
+                updateFeatureImportance(trainResult.feature_importance);
+            }
+            
+            // 显示性能指标
+            document.getElementById('metrics-container').style.display = 'flex';
+            document.getElementById('train-accuracy').textContent = `${(trainResult.train_accuracy * 100).toFixed(2)}%`;
+            document.getElementById('val-accuracy').textContent = `${(trainResult.val_accuracy * 100).toFixed(2)}%`;            
+            // 3. 上传并预测测试集
+            const formDataTest = new FormData();
+            formDataTest.append('file', testFileInput.files[0]);
+            
+            document.getElementById('model-status').textContent = '预测测试集中...';
+            
+            const testRes = await fetch('/predict_test', {
+                method: 'POST',
+                body: formDataTest
+            });
+            
+            const testResult = await testRes.json();
+            if (!testRes.ok) throw new Error(testResult.error || '预测失败');
+            
+            showAlert('✅ 测试集预测完成，正在展示结果！', 'success');
+            renderTestResults(testResult.data);
+            
+            // 更新状态
+            document.getElementById('model-status').textContent = '已完成';
+        } catch (error) {
+            console.error('训练错误:', error);
+            showAlert(`❌ 错误: ${error.message}`, 'error');
+            document.getElementById('model-status').textContent = '错误';
+        } finally {
+            runButton.disabled = false;
+            runButton.innerHTML = '<i class="fas fa-play"></i> 训练并预测';
+        }
+    });
+    
+    // Radiomics特征提取
+    document.getElementById('extract-button').addEventListener('click', async function() {
+        const basePath = document.getElementById('base-path-input').value.trim();
+        const outputPath = document.getElementById('output-path-input').value.trim();
+        
+        
+        if (!basePath || !outputPath) {
+            showAlert('请填写完整路径信息', 'warning');
+            return;
+        }
+        
+        this.disabled = true;
+        this.innerHTML = '<span class="loader"></span> 提取中...';
+        
+        // 显示进度条和状态
+        document.getElementById('extract-progress').style.display = 'block';
+        document.getElementById('extract-status').style.display = 'block';
+        document.getElementById('extract-status-text').textContent = '正在提取特征...';
+        
+        try {
+            const response = await fetch('/extract_features', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    basePath, 
+                    outputPath
+                })
+            });
+            
+            // 模拟进度更新（实际应用中应该使用WebSocket或轮询获取真实进度）
+            // simulateProgress();
+            
+            const result = await response.json();
+            if (response.ok) {
+                showAlert(`🎉 提取成功：${result.message}`, 'success');
+                document.getElementById('extract-status-text').textContent = '提取完成';
+            } else {
+                throw new Error(result.error || '提取失败');
+            }
+        } catch (error) {
+            console.error('提取错误:', error);
+            showAlert(`❌ 提取错误：${error.message}`, 'error');
+            document.getElementById('extract-status-text').textContent = '提取失败';
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-cogs"></i> 提取Radiomics特征';
+        }
+    });
+    
+    // 更新学习曲线图表
+    function updateLearningCurveChart(curveData) {
+        if (modelChart.data.datasets.length > 0) {
+            // 如果已有数据，使用动画更新
+            modelChart.data.labels = curveData.labels || [];
+            modelChart.data.datasets[0].data = curveData.train_scores || [];
+            modelChart.data.datasets[1].data = curveData.val_scores || [];
+            modelChart.update();
+        } else {
+            // 初次加载数据
+            modelChart.data = {
+                labels: curveData.labels || [],
+                datasets: [
+                    {
+                        label: '训练集得分',
+                        data: curveData.train_scores || [],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '验证集得分',
+                        data: curveData.val_scores || [],
+                        borderColor: '#4cc9f0',
+                        backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            };
+            modelChart.update();
+        }        
+        // 添加图表动画
+        anime({
+            targets: '.chart-container',
+            opacity: [0, 1],
+            translateY: [20, 0],
+            duration: 800,
+            easing: 'easeOutExpo'
+        });
+    }
+    
+    // 更新混淆矩阵
+    function updateConfusionMatrix(matrix) {
+        confusionChart.data.datasets[0].data = [
+            matrix.true_negative || 0,
+            matrix.false_positive || 0,
+            matrix.false_negative || 0,
+            matrix.true_positive || 0
+        ];
+        confusionChart.update();
+    }
+    
+    // 更新特征重要性
+    function updateFeatureImportance(features) {
+        // 只显示前20个最重要的特征
+        const topFeatures = features.slice(0, 20);
+        
+        featureChart.data.labels = topFeatures.map(f => f.name);
+        featureChart.data.datasets[0].data = topFeatures.map(f => f.importance);
+        featureChart.update();
+    }
+    
+    // 渲染测试结果
+    function renderTestResults(data) {
+        const headerRow = document.getElementById('test-results-header');
+        const body = document.getElementById('test-results-body');
+        
+        // 清空旧内容
+        headerRow.innerHTML = '';
+        body.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            headerRow.innerHTML = '<th>没有数据</th>';
+            return;
+        }
+        
+        // 表头
+        const headers = Object.keys(data[0]);
+        headers.forEach(h => {
+            const th = document.createElement('th');
+            th.style.padding = '10px 15px';
+            th.textContent = h;
+            headerRow.appendChild(th);
+        });
+        
+        // 每行数据
+        data.forEach((row, index) => {
+            const tr = document.createElement('tr');
+            
+            // 添加淡入动画
+            tr.style.opacity = '0';
+            anime({
+                targets: tr,
+                opacity: 1,
+                delay: index * 50,
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+            
+            headers.forEach(h => {
+                const td = document.createElement('td');
+                td.style.padding = '10px 15px';
+                
+                // 特殊处理预测标签
+                if (h === 'predicted_label') {
+                    if (row[h] == 1) {
+                        td.innerHTML = `<span class="tag tag-danger"><i class="fas fa-exclamation-circle"></i> 阳性</span>`;
+                    } else {
+                        td.innerHTML = `<span class="tag tag-success"><i class="fas fa-check-circle"></i> 阴性</span>`;
+                    }
+                } else if (h === 'probability') {
+                    // 显示概率进度条
+                    const percent = Math.round(row[h] * 100);
+                    const color = percent > 70 ? 'rgba(249, 65, 68, 0.7)' : 
+                                  percent > 30 ? 'rgba(248, 150, 30, 0.7)' : 'rgba(75, 192, 192, 0.7)';
+                    
+                    td.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1; height: 8px; background-color: #eee; border-radius: 4px;">
+                                <div style="height: 100%; width: ${percent}%; background-color: ${color}; border-radius: 4px;"></div>
+                            </div>
+                            <span>${percent}%</span>
+                        </div>
+                    `;
+                } else {
+                    td.textContent = row[h];
+                }
+                
+                tr.appendChild(td);
+            });
+            
+            body.appendChild(tr);
+        });
+    }
+    
+    // 显示提示信息
+    function showAlert(message, type) {
+        const alertBox = document.createElement('div');
+        alertBox.style.position = 'fixed';
+        alertBox.style.top = '20px';
+        alertBox.style.right = '20px';
+        alertBox.style.padding = '15px 20px';
+        alertBox.style.borderRadius = '8px';
+        alertBox.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        alertBox.style.zIndex = '1000';
+        alertBox.style.display = 'flex';
+        alertBox.style.alignItems = 'center';
+        alertBox.style.gap = '10px';
+        alertBox.style.maxWidth = '400px';
+        alertBox.style.transform = 'translateX(120%)';
+        alertBox.style.transition = 'transform 0.3s ease-out';
+        
+        // 根据类型设置颜色
+        let icon, bgColor, textColor;
+        switch(type) {
+            case 'success':
+                icon = 'fa-check-circle';
+                bgColor = 'rgba(76, 201, 240, 0.9)';
+                textColor = 'white';
+                break;
+            case 'warning':
+                icon = 'fa-exclamation-triangle';
+                bgColor = 'rgba(248, 150, 30, 0.9)';
+                textColor = 'white';
+                break;
+            case 'error':
+                icon = 'fa-times-circle';
+                bgColor = 'rgba(249, 65, 68, 0.9)';
+                textColor = 'white';
+                break;
+            default:
+                icon = 'fa-info-circle';
+                bgColor = 'rgba(67, 97, 238, 0.9)';
+                textColor = 'white';
+        }
+        
+        alertBox.style.backgroundColor = bgColor;
+        alertBox.style.color = textColor;
+        
+        alertBox.innerHTML = `
+            <i class="fas ${icon}" style="font-size: 1.2rem;"></i>
+            <div>${message}</div>
+        `;
+        
+        document.body.appendChild(alertBox);
+        
+        // 显示提示
+        setTimeout(() => {
+            alertBox.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // 3秒后自动消失
+        setTimeout(() => {
+            alertBox.style.transform = 'translateX(120%)';
+            setTimeout(() => {
+                document.body.removeChild(alertBox);
+            }, 300);
+        }, 3000);
+    }
+    
+    // 导出结果按钮
+    document.getElementById('export-results').addEventListener('click', function() {
+        // 这里应该实现导出功能，例如生成CSV文件
+        showAlert('导出功能将在实际应用中实现', 'info');
+    });
+    
+    // 初始化页面动画
+    anime({
+        targets: '.card',
+        opacity: [0, 1],
+        translateY: [30, 0],
+        delay: anime.stagger(100),
+        duration: 800,
+        easing: 'easeOutExpo'
+    });
+</script>
+</body>
+</html>
