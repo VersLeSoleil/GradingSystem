@@ -58,6 +58,8 @@ def train_model_api():
     data = request.json
     model_type = data.get('model_type', 'logistic')
     regularization = data.get('regularization', 'l1')
+    n_estimators = data.get('n_estimators', 100)  # 设置默认值
+    max_depth = data.get('max_depth', 4)
 
     if global_dataset is None:
         return jsonify({'error': 'No dataset loaded'}), 400
@@ -85,7 +87,7 @@ def train_model_api():
         if model_type == 'logistic':
             result = train_model_by_lr(temp_path, regularization=regularization)
         else:
-            result = train_model_by_rf(temp_path)
+            result = train_model_by_rf(temp_path,n_estimators=n_estimators, max_depth=max_depth)
         global global_model
         global_model = result['model']
         lc = result['learning_curve']

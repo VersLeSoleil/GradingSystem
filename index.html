@@ -1176,9 +1176,10 @@
         
         const modelType = document.getElementById('model-select').value;
         const regularization = document.querySelector('input[name="regularization"]:checked')?.value || 'l2';
-        const nEstimators = document.getElementById('n-estimators')?.value || 100;
-        const maxDepth = document.getElementById('max-depth')?.value || 5;
-
+        const nEstimators = parseInt(document.getElementById('n-estimators')?.value || 100);
+        const maxDepth = parseInt(document.getElementById('max-depth')?.value || 5);
+        console.log(nEstimators,maxDepth);
+        console.log(modelType);
 
         // 更新UI状态
         runButton.disabled = true;
