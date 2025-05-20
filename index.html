@@ -163,7 +163,7 @@
 
         .file-name {
             font-size: 0.85rem;
-            color: var(--medium-gray);
+            color: #343a40;
             margin-top: 5px;
             white-space: nowrap;
             overflow: hidden;
@@ -272,7 +272,9 @@
 
         .chart-container {
             flex: 1;
-            min-height: 400px;
+            max-height: 600px;
+
+            max-width: 950px;
             margin-top: 20px;
             position: relative;
             background: rgba(67, 97, 238, 0.03);
@@ -374,6 +376,7 @@
         #test-results-container {
             overflow-x: auto;
             max-height: 300px;
+            max-width: 1000px;
             border: 1px solid var(--medium-gray);
             border-radius: var(--border-radius);
             padding: 10px;
@@ -1524,8 +1527,47 @@
     
     // 导出结果按钮
     document.getElementById('export-results').addEventListener('click', function() {
-        // 这里应该实现导出功能，例如生成CSV文件
-        showAlert('导出功能将在实际应用中实现', 'info');
+        // 获取表头
+    const headerRow = document.getElementById('test-results-header');
+    const bodyRows = document.getElementById('test-results-body').querySelectorAll('tr');
+    if (!headerRow || headerRow.children.length === 0 || bodyRows.length === 0) {
+        showAlert('没有可导出的预测结果', 'warning');
+        return;
+    }
+
+    // 组装CSV内容
+    let csv = '';
+    // 表头
+    const headers = Array.from(headerRow.children).map(th => th.textContent.trim());
+    csv += headers.join(',') + '\r\n';
+
+    // 表体
+    bodyRows.forEach(tr => {
+        const row = Array.from(tr.children).map(td => {
+            // 处理带标签的内容
+            if (td.querySelector('.tag-danger')) return '阳性';
+            if (td.querySelector('.tag-success')) return '阴性';
+            // 处理概率进度条
+            if (td.querySelector('span') && td.querySelector('span').textContent.endsWith('%')) {
+                return td.querySelector('span').textContent.replace('%', '');
+            }
+            return td.textContent.trim();
+        });
+        csv += row.join(',') + '\r\n';
+    });
+
+    // 创建Blob并下载
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '预测结果.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showAlert('预测结果已导出为CSV文件', 'success');
     });
     
     // 初始化页面动画
