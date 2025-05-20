@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, request, jsonify,send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -9,36 +9,42 @@ from MachineLearn.RandomForest import train_model_by_rf
 import joblib
 import os
 from PreProcessing.FeatureExtractPlus import extract_features
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 # 全局变量存储模型和数据集
 global_model = None
 global_dataset = None
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 @app.route("/")  # 确保有这个路由
 def home():
     return "Hello, World!"  # 返回一些内容
+
 
 @app.route('/index')
 def serve_index():
     return send_from_directory('.', 'index.html')
 
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    print(f"收到上传请求，当前工作目录: {os.getcwd()}")
     if 'file' not in request.files:
         print('未找到文件！')
         return jsonify({'error': 'No file uploaded'}), 400
-    
+
     file = request.files['file']
     print(f"接收到文件: {file.filename}")
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    
+
     filepath = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(filepath)
-    
+
     try:
         data = pd.read_csv(filepath)
         global global_dataset
@@ -51,6 +57,7 @@ def upload_file():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/train', methods=['POST'])
 def train_model_api():
@@ -87,7 +94,7 @@ def train_model_api():
         if model_type == 'logistic':
             result = train_model_by_lr(temp_path, regularization=regularization)
         else:
-            result = train_model_by_rf(temp_path,n_estimators=n_estimators, max_depth=max_depth)
+            result = train_model_by_rf(temp_path, n_estimators=n_estimators, max_depth=max_depth)
         global global_model
         global_model = result['model']
         lc = result['learning_curve']
@@ -111,6 +118,7 @@ def train_model_api():
         print("❌ 训练异常：", str(e))
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/predict_test', methods=['POST'])
 def predict_test_api():
     if 'file' not in request.files:
@@ -128,7 +136,7 @@ def predict_test_api():
 
     try:
         # ✅ 读取测试集
-        test_data = pd.read_csv(temp_test_path,header=0)
+        test_data = pd.read_csv(temp_test_path, header=0)
 
         # ✅ 清洗数据：替换无穷大为 NaN，再删除缺失行
         test_data.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -157,8 +165,8 @@ def predict_test_api():
         return jsonify({'error': f'预测失败，输入数据中可能有非法值或格式不匹配：{str(ve)}'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
-    
+
+
 @app.route('/extract_features', methods=['POST'])
 def extract_features_api():
     try:
@@ -172,6 +180,7 @@ def extract_features_api():
     except Exception as e:
         print("❌ 特征提取异常：", str(e))
         return jsonify({'error': str(e)}), 500
-    
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)

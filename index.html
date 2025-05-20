@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>疾病超声影像智能分级系统</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <script src="https://unpkg.com/chart.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -454,7 +454,7 @@
             .container {
                 flex-direction: column;
             }
-            
+
             .control-panel {
                 flex: 1;
                 width: 100%;
@@ -465,11 +465,11 @@
             .container {
                 padding: 10px;
             }
-            
+
             .control-panel, .visualization-panel {
                 padding: 15px;
             }
-            
+
             .radio-group {
                 flex-direction: column;
                 gap: 8px;
@@ -591,12 +591,13 @@
             color: var(--primary-color);
             margin: 5px 0;
         }
-
         .metric-label {
             font-size: 0.85rem;
-            color: var(--medium-gray);
+            color: #0080ff;
         }
+
     </style>
+
 </head>
 <body>
     <button class="theme-toggle" id="theme-toggle">
@@ -610,7 +611,7 @@
                 <i class="fas fa-sliders-h"></i>
                 模型训练控制台
             </h2>
-            
+
             <div class="control-group">
                 <label class="control-label">
                     <i class="fas fa-database"></i>
@@ -629,7 +630,7 @@
                     <input type="file" id="dataset-file" class="file-input" accept=".csv,.xlsx,.data">
                 </div>
             </div>
-            
+
             <div class="control-group">
                 <label class="control-label">
                     <i class="fas fa-vial"></i>
@@ -648,7 +649,7 @@
                     <input type="file" id="test-file" class="file-input" accept=".csv">
                 </div>
             </div>
-            
+
             <div class="control-group">
                 <label class="control-label">
                     <i class="fas fa-project-diagram"></i>
@@ -665,7 +666,7 @@
                     <div class="select-arrow">▼</div>
                 </div>
             </div>
-            
+
             <div id="regularization-options" class="control-group" style="display: none;">
                 <label class="control-label">
                     <i class="fas fa-tape"></i>
@@ -684,7 +685,7 @@
                     </label>
                 </div>
             </div>
-            
+
             <div id="hyperparams-options" class="control-group" style="display: none;">
                 <label class="control-label">
                     <i class="fas fa-tune"></i>
@@ -698,7 +699,7 @@
                     </div>
                     <span id="n-estimators-display">100</span>
                 </div>
-                
+
                 <div class="control-group">
                     <label class="control-label">最大深度 (max_depth)</label>
                     <input type="range" id="max-depth" min="1" max="20" value="5" class="input-field">
@@ -708,18 +709,18 @@
                     <span id="max-depth-display">5</span>
                 </div>
             </div>
-            
+
             <button id="run-model" class="run-button">
                 <i class="fas fa-play"></i>
                 训练并预测
             </button>
-            
+
             <div class="selected-info fade-in">
                 <div><span class="info-label"><i class="fas fa-database"></i> 当前数据集:</span> <span id="current-dataset">无</span></div>
                 <div><span class="info-label"><i class="fas fa-project-diagram"></i> 当前模型:</span> <span id="current-model">未选择</span></div>
                 <div><span class="info-label"><i class="fas fa-info-circle"></i> 状态:</span> <span id="model-status">就绪</span></div>
             </div>
-            
+
             <div class="metrics-container" id="metrics-container" style="display: none;">
                 <div class="metric-card">
                     <div class="metric-label">训练准确率</div>
@@ -735,37 +736,37 @@
                 </div> -->
             </div>
         </div>
-        
+
         <!-- 右侧可视化面板 -->
         <div class="visualization-panel card">
             <h2 class="panel-title">
                 <i class="fas fa-chart-line"></i>
                 模型性能分析
             </h2>
-            
+
             <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button class="tab-button" data-tab="learning-curve">学习曲线</button>
                 <button class="tab-button" data-tab="confusion-matrix">混淆矩阵</button>
                 <button class="tab-button" data-tab="feature-importance">特征重要性</button>
             </div>
-            
+
             <div class="chart-container" id="learning-curve-tab">
                 <canvas id="model-chart"></canvas>
             </div>
-            
+
             <div class="chart-container" id="confusion-matrix-tab" style="display: none;">
                 <canvas id="confusion-matrix-chart"></canvas>
             </div>
-            
+
             <div class="chart-container" id="feature-importance-tab" style="display: none;">
                 <canvas id="feature-importance-chart"></canvas>
             </div>
-            
+
             <h3 class="panel-title" style="margin-top: 20px;">
                 <i class="fas fa-table"></i>
                 测试集预测结果
             </h3>
-            
+
             <div id="test-results-container">
                 <table id="test-results-table" style="width: 100%; border-collapse: collapse;">
                     <thead>
@@ -774,7 +775,7 @@
                     <tbody id="test-results-body"></tbody>
                 </table>
             </div>
-            
+
             <div class="control-group" style="margin-top: 20px;">
                 <button id="export-results" class="run-button" style="background-color: var(--success-color);">
                     <i class="fas fa-file-export"></i>
@@ -791,7 +792,7 @@
                 <i class="fas fa-microscope"></i>
                 Radiomics特征提取
             </h2>
-            
+
             <div class="control-group">
                 <label class="control-label">
                     <i class="fas fa-folder-open"></i>
@@ -803,7 +804,7 @@
                 </label>
                 <input type="text" id="base-path-input" class="input-field" placeholder="例如：E:/dachuang/Radiomics/Data/Test">
             </div>
-            
+
             <div class="control-group">
                 <label class="control-label">
                     <i class="fas fa-file-csv"></i>
@@ -815,16 +816,16 @@
                 </label>
                 <input type="text" id="output-path-input" class="input-field" placeholder="例如：E:/dachuang/Radiomics/Data/extracted_features.csv">
             </div>
-            
+
             <button id="extract-button" class="run-button">
                 <i class="fas fa-cogs"></i>
                 提取Radiomics特征
             </button>
-            
+
             <div class="progress-container" id="extract-progress" style="display: none; margin-top: 15px;">
                 <div class="progress-bar" id="extract-progress-bar" style="width: 0%"></div>
             </div>
-            
+
             <div id="extract-status" class="selected-info" style="display: none; margin-top: 15px;">
                 <div><span class="info-label"><i class="fas fa-info-circle"></i> 状态:</span> <span id="extract-status-text">准备中...</span></div>
                 <div><span class="info-label"><i class="fas fa-clock"></i> 已处理:</span> <span id="extract-processed">0</span> / <span id="extract-total">0</span> 图像</div>
@@ -836,20 +837,20 @@
     // 主题切换功能
     const themeToggle = document.getElementById('theme-toggle');
     const body = document.body;
-    
+
     // 检查本地存储中的主题偏好
     const currentTheme = localStorage.getItem('theme') || 'light';
     body.setAttribute('data-theme', currentTheme);
     updateThemeIcon(currentTheme);
-    
+
     themeToggle.addEventListener('click', () => {
         const currentTheme = body.getAttribute('data-theme');
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        
+
         body.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
         updateThemeIcon(newTheme);
-        
+
         // 添加动画效果
         anime({
             targets: themeToggle,
@@ -858,7 +859,7 @@
             easing: 'easeInOutQuad'
         });
     });
-    
+
     function updateThemeIcon(theme) {
         const icon = themeToggle.querySelector('i');
         if (theme === 'dark') {
@@ -869,12 +870,12 @@
             icon.classList.add('fa-moon');
         }
     }
-    
+
     // 初始化图表
     const ctx = document.getElementById('model-chart').getContext('2d');
     const confusionCtx = document.getElementById('confusion-matrix-chart').getContext('2d');
     const featureCtx = document.getElementById('feature-importance-chart').getContext('2d');
-    
+
     const modelChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -931,7 +932,7 @@
             }
         }
     });
-    
+
     const confusionChart = new Chart(confusionCtx, {
         type: 'bar',
         data: {
@@ -980,7 +981,7 @@
             }
         }
     });
-    
+
     const featureChart = new Chart(featureCtx, {
         type: 'bar',
         data: {
@@ -1020,7 +1021,7 @@
             }
         }
     });
-    
+
     // 标签切换功能
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
@@ -1028,27 +1029,27 @@
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
             });
-            
+
             // 添加active类到当前按钮
             button.classList.add('active');
-            
+
             // 隐藏所有标签内容
             document.querySelectorAll('.chart-container').forEach(tab => {
                 tab.style.display = 'none';
             });
-            
+
             // 显示当前标签内容
             const tabId = button.getAttribute('data-tab') + '-tab';
             document.getElementById(tabId).style.display = 'block';
         });
     });
-    
+
     // 模型选择逻辑
     document.getElementById('model-select').addEventListener('change', function() {
         const selectedModel = this.value;
         const regularizationGroup = document.getElementById('regularization-options');
         const hyperparamsGroup = document.getElementById('hyperparams-options');
-        
+
         // 更新当前模型显示
         let modelName = '';
         switch(selectedModel) {
@@ -1077,9 +1078,9 @@
                 regularizationGroup.style.display = 'none';
                 hyperparamsGroup.style.display = 'none';
         }
-        
+
         document.getElementById('current-model').textContent = modelName;
-        
+
         // 添加动画效果
         anime({
             targets: '#current-model',
@@ -1088,7 +1089,7 @@
             easing: 'easeOutExpo'
         });
     });
-    
+
     // 滑块控制
     document.getElementById('n-estimators').addEventListener('input', function() {
         const value = this.value;
@@ -1096,14 +1097,14 @@
         document.getElementById('n-estimators-value').style.width = `${percentage}%`;
         document.getElementById('n-estimators-display').textContent = value;
     });
-    
+
     document.getElementById('max-depth').addEventListener('input', function() {
         const value = this.value;
         const percentage = (value / 20) * 100;
         document.getElementById('max-depth-value').style.width = `${percentage}%`;
         document.getElementById('max-depth-display').textContent = value;
     });
-    
+
     // 文件上传处理
     const datasetFileInput = document.getElementById('dataset-file');
     const testFileInput = document.getElementById('test-file');
@@ -1111,20 +1112,20 @@
     const testFileNameDisplay = document.getElementById('test-file-name');
     const currentDatasetDisplay = document.getElementById('current-dataset');
     const runButton = document.getElementById('run-model');
-    
+
     datasetFileInput.addEventListener('change', async function(e) {
         if (this.files.length > 0) {
             const file = this.files[0];
             fileNameDisplay.textContent = file.name;
-            
+
             // 显示加载动画
             currentDatasetDisplay.innerHTML = `<span class="loader"></span> 分析数据集中...`;
-            
+
             try {
                 const formData = new FormData();
                 formData.append('file', file);
-                
-                const response = await fetch('/upload', {
+
+                const response = await fetch('http://8.138.244.2:8080/upload', {
                     method: 'POST',
                     body: formData
                 });
