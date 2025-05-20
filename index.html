@@ -206,6 +206,21 @@
         }
 
         /* 按钮样式 */
+        .tab-button {
+            padding: 8px 16px;
+            border: none;
+            background-color: #eee;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .tab-button.active {
+            background-color: #4361ee;
+            color: white;
+        }
+        .tab-button:hover {
+            background-color: #ccc;
+        }
         .run-button {
             background-color: var(--primary-color);
             color: white;
@@ -726,7 +741,7 @@
             </h2>
             
             <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="tab-button active" data-tab="learning-curve">学习曲线</button>
+                <button class="tab-button" data-tab="learning-curve">学习曲线</button>
                 <button class="tab-button" data-tab="confusion-matrix">混淆矩阵</button>
                 <button class="tab-button" data-tab="feature-importance">特征重要性</button>
             </div>
@@ -892,6 +907,15 @@
                     }
                 },
                 x: {
+                    ticks: {
+                        callback: function(value, index, values) {
+                        // 将 X 轴刻度值保留 2 位小数
+                        const rawValue = this.getLabelForValue(value);
+                        return typeof rawValue === 'number'
+                            ? rawValue.toFixed(2)
+                            : rawValue;
+                        }
+                    },
                     title: {
                         display: true,
                         text: '训练样本比例/树的数量'
@@ -1154,7 +1178,8 @@
         const regularization = document.querySelector('input[name="regularization"]:checked')?.value || 'l2';
         const nEstimators = document.getElementById('n-estimators')?.value || 100;
         const maxDepth = document.getElementById('max-depth')?.value || 5;
-        
+
+
         // 更新UI状态
         runButton.disabled = true;
         runButton.innerHTML = '<span class="loader"></span> 训练中...';
@@ -1193,12 +1218,17 @@
             
             // 更新图表
             updateLearningCurveChart(trainResult.learning_curve);
-            
+
+
+            console.log('完整训练结果:', trainResult);
+            console.log('混淆矩阵数据:', trainResult.confusion_matrix);
+            console.log('特征重要性数据:', trainResult.feature_importance);
+
             // 更新混淆矩阵
             if (trainResult.confusion_matrix) {
                 updateConfusionMatrix(trainResult.confusion_matrix);
             }
-            
+
             // 更新特征重要性
             if (trainResult.feature_importance) {
                 updateFeatureImportance(trainResult.feature_importance);
@@ -1236,7 +1266,7 @@
             runButton.innerHTML = '<i class="fas fa-play"></i> 训练并预测';
         }
     });
-    
+
     // Radiomics特征提取
     document.getElementById('extract-button').addEventListener('click', async function() {
         const basePath = document.getElementById('base-path-input').value.trim();
@@ -1288,6 +1318,7 @@
     
     // 更新学习曲线图表
     function updateLearningCurveChart(curveData) {
+
         if (modelChart.data.datasets.length > 0) {
             // 如果已有数据，使用动画更新
             modelChart.data.labels = curveData.labels || [];

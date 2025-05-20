@@ -99,7 +99,10 @@ def train_model_api():
             'status': 'success',
             'train_accuracy': result['train_accuracy'],
             'val_accuracy': result['val_accuracy'],
-            'learning_curve': learning_curve
+            'learning_curve': learning_curve,
+            'confusion_matrix': result.get('confusion_matrix'),
+            'feature_importance': result.get('feature_importance')
+
         })
 
     except Exception as e:
