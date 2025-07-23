@@ -29,13 +29,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//哈希加密注册密码
-	fmt.Println("注册用户:",user.Password)
-	hashedPwd, err := db.HashPassword(user.Password)
-	if err != nil {
-		restful.RespondWithError(w, http.StatusInternalServerError, "注册时密码加密失败: "+err.Error())
-		return
-	}
-	user.Password = hashedPwd
+	fmt.Println("注册用户:", user.Password)
 
 	if err := db.CreateUser(user); err != nil {
 		restful.RespondWithError(w, http.StatusInternalServerError, "注册失败: "+err.Error())

@@ -1,6 +1,7 @@
 package structTypes
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -42,15 +43,37 @@ type UserInfo struct {
 
 // 用户信息结构体
 type User struct {
-	UserID       int
 	UserName     string
 	PasswordHash string
 	Sex          string
 	Birthday     time.Time
-	Avatar       string
+	Avatar       sql.NullString
 	Role         string
-	Email        string
-	Phone        string
-	Resume       string
+	Email        sql.NullString
+	Phone        sql.NullString
+	Resume       sql.NullString
 	CreatedDate  time.Time
+}
+
+type PostInfo struct {
+	TypeName     string    `json:"type_name"`
+	UserName     string    `json:"user_name"`
+	Title        string    `json:"title"`
+	Introduction string    `json:"introduction"`
+	Content      string    `json:"content"`
+	CreatedDate  time.Time `json:"created_date"`
+	UpdatedDate  time.Time `json:"updated_date"`
+	IsPublic     bool      `json:"is_public"`
+}
+
+type Post struct {
+	PostID       int       `json:"post_id"`
+	TypeName     string    `json:"type_name"`
+	UserName     string    `json:"user_name"`
+	Title        string    `json:"title"`
+	Introduction string    `json:"introduction"`
+	Content      string    `json:"content"`
+	CreatedDate  time.Time `json:"created_date"`
+	UpdatedDate  time.Time `json:"updated_date"`
+	IsPublic     bool      `json:"is_public"`
 }
