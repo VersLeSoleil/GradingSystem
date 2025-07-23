@@ -11,7 +11,11 @@ func RegisterMux(mux *http.ServeMux) {
 
 	mux.HandleFunc("/login", function.LoginCheck)
 	mux.HandleFunc("/register", function.RegisterUser)
-
+	mux.HandleFunc("/createPost", function.CreatePost)
+	mux.HandleFunc("/getPosts", function.GetAllPosts)
+	mux.HandleFunc("/getPostByID", function.GetPostByID)
+	mux.HandleFunc("/updatePost", function.UpdatePost)
+	mux.HandleFunc("/getPostsByUsername", function.GetPostsByUsername)
 }
 
 func initDATABase() {

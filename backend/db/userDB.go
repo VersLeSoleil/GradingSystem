@@ -3,6 +3,7 @@ package db
 import (
 	"backend/structTypes"
 	"database/sql"
+	"fmt"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -23,11 +24,12 @@ func CreateUser(tempUser structTypes.UserRegister) error {
 
 // 根据用户名获取用户信息
 func GetUserByUsername(username string) (*structTypes.User, error) {
-	query := `SELECT * FROM user_table WHERE user_name = ?`
+	query := `SELECT user_name, user_password_hash, sex, birthday, avatar, role, email, phone, resume, created_date FROM user_table WHERE user_name = ?`
 	row := DB.QueryRow(query, username)
 	var u structTypes.User
-	err := row.Scan(&u.UserID, &u.UserName, &u.PasswordHash, &u.Sex, &u.Birthday, &u.Avatar, &u.Role, &u.Email, &u.Phone, &u.Resume, &u.CreatedDate)
+	err := row.Scan(&u.UserName, &u.PasswordHash, &u.Sex, &u.Birthday, &u.Avatar, &u.Role, &u.Email, &u.Phone, &u.Resume, &u.CreatedDate)
 	if err != nil {
+		fmt.Println("GetUserByUsername error:", err)
 		return nil, err
 	}
 	return &u, nil
