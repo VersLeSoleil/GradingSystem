@@ -7,6 +7,7 @@ import Grading from '../view/Grading.vue'
 import ModelDetail from '../view/ModelDetail.vue'
 import Profile from '../view/components/userInfo.vue'
 import { compile } from 'vue'
+import RegisterPage from '@/view/registerPage.vue'
 
 const routes = [
     {
@@ -48,6 +49,11 @@ const routes = [
         path:'/profile',
         name: 'Profile',
         component:Profile
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: RegisterPage
     }
 ]
 

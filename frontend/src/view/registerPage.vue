@@ -1,178 +1,82 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import {useUserStore} from '@/store/user';
-//import {axios} from 'axios';
+
+const router = useRouter();
 
 const username = ref('');
 const password = ref('');
-const router = useRouter();
-const userStore = useUserStore();
+const confirmPassword = ref('');
 
-function forgotman() {
-  alert('Please email ssnigdhasiraz22@sirhenryfloyd.co.uk to request a password reset');
+const gotoLogin = () => {
+  router.push('/login');
 }
-
-async function loginBrungle() {
-  try {
-    console.log(username.value, password.value);
-    let endpoint = 'http://localhost:8888/login';
-    let method = 'POST';
-    let requestBody = {
-      user_name: username.value,
-      password: password.value
-    };
-      // 发送请求到后端
-    const response = await fetch(endpoint, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-      credentials: 'include', 
-    });
-
-    // 调试：打印响应状态码和响应内容
-    console.log('Response Status:', response.status);
-    console.log('Response Headers:', response.headers);
-
-    // 解析响应
-    const result = await response.json();
-    console.log('Response Data:', result);
-    userStore.print();
-    // 处理成功与否
-    if (response.ok) {
-      userStore.setAccessToken(result.access_token)
-      userStore.setUserInfo(result.user)
-      userStore.print();
-      alert('登录成功！');
-      router.push('/home'); 
-    } else {
-      // 错误处理
-      alert(result.error || '登录失败！');
-    }
-  } catch (error) {
-    alert(error.message) 
-  }
-}
-
-//注册
-const registerDialogVisible = ref(false)
-const registerUsername = ref('')
-const registerPassword = ref('')
-const confirmPassword = ref('')
-const sex = ref('')
-const birthday=ref('')
-
-
-
-function openRegisterDialog() {
-  router.push('/register');
-}
-
-function closeRegisterDialog() {
-  registerDialogVisible.value = false
-  registerUsername.value = ''
-  registerPassword.value = ''
-  confirmPassword.value = ''
-}
-
 async function registerUser() {
-  if (!registerUsername.value || !registerPassword.value) {
-    alert('请输入用户名和密码')
-    return
+  console.log('registerUser 被调用');
+  if (!username.value || !password.value) {
+    alert('请输入用户名和密码');
+    return;
   }
-  if (registerPassword.value !== confirmPassword.value) {
-    alert('两次输入的密码不一致')
-    return
+  if (password.value !== confirmPassword.value) {
+    alert('两次输入的密码不一致');
+    return;
   }
+
   try {
-    let endpoint = 'http://localhost:8888/register';
-    let method = 'POST';
-    let requestBody = {
-      register_username: registerUsername.value,
-      register_password: registerPassword.value
-    };
-      // 发送请求到后端
+    const endpoint = 'http://localhost:8888/register';
     const response = await fetch(endpoint, {
-      method: method,
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
-      credentials: 'include', 
+      body: JSON.stringify({
+        user_name: username.value,
+        password: password.value,
+      }),
+      credentials: 'include',
     });
 
-    // 调试：打印响应状态码和响应内容
-    console.log('Response Status:', response.status);
-    console.log('Response Headers:', response.headers);
-
-    // 解析响应
     const result = await response.json();
-    console.log('Response Data:', result);
-    userStore.print();
-    // 处理成功与否
     if (response.ok) {
-      userStore.setAccessToken(result.access_token)
-      userStore.setUserInfo(result.user)
-      userStore.print();
-      alert('登录成功！');
-      router.push('/home'); 
+      alert('注册成功！');
+      router.push('/login');
     } else {
-      // 错误处理
-      alert(result.error || '登录失败！');
+      alert(result.error || '注册失败！');
     }
   } catch (error) {
-    alert(error.message) 
+    alert(error.message);
   }
-  alert(`注册成功！用户名: ${registerUsername.value}`)
-  closeRegisterDialog()
 }
 </script>
 
-
-
 <template>
   <div id="login-container">
-    <h1 class="login-title">欢迎使用分级喵</h1>
+    
     <br>
     <br>
       <div class="wrapper">
         <form @submit.prevent="loginBrungle">
-          <h1>登录</h1>
+          <h1>创建一个账号</h1>
           <div class="input-box">
             <i class="fas fa-envelope icon"></i>
             <input id="usernameInput" v-model="username" type="text" required />
             <label>用户名</label>
           </div>
           <div class="input-box">
-            <i class="fas fa-lock icon"></i>
-            <input id="passwordInput" v-model="password" type="password" required />
+            <input v-model="password" type="password" required />
             <label>密码</label>
           </div>
-          <div class="row">
-            <a href="#" @click.prevent="forgotman">忘记密码？</a>
+          <div class="input-box">
+            <input v-model="confirmPassword" type="password" required />
+            <label>确认密码</label>
           </div>
-          <button class="btn" type="submit">登录</button>
+          <button class="btn" type="submit" @click="registerUser">注册</button>
           <div class="signup-link">
-            <p>没有账号？ <a href="#" @click.prevent="openRegisterDialog">立即创建</a></p>
+            <p>已有账号？ <a href="#" @click.prevent="gotoLogin">立即登录</a></p>
           </div>
         </form>
       </div>
   </div>
-  <el-dialog v-model="registerDialogVisible" title="注册账号" width="400px" :before-close="closeRegisterDialog">
-    <div style="display: flex; flex-direction: column; gap: 16px; padding: 8px 0;">
-      <el-input v-model="registerUsername" placeholder="请输入用户名" />
-      <el-input v-model="registerPassword" placeholder="请输入密码" show-password />
-      <el-input v-model="confirmPassword" placeholder="请再次输入密码" show-password />
-      <el-input v-model="sex" placeholder="请" show-password />
-
-      <div style="text-align: right;">
-        <el-button @click="closeRegisterDialog">取消</el-button>
-        <el-button type="primary" @click="registerUser">注册</el-button>
-      </div>
-    </div>
-  </el-dialog>
   
 </template>
 

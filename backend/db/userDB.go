@@ -3,20 +3,21 @@ package db
 import (
 	"backend/structTypes"
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // 注册新用户
-func CreateUser(tempUser structTypes.UserInfo) error {
+func CreateUser(tempUser structTypes.UserRegister) error {
 	hash, err := HashPassword(tempUser.Password)
 	if err != nil {
 		return err
 	}
-	query := `INSERT INTO user_table (user_name, user_password_hash, sex, birthday,avatar, role, email, phone, resume) 
-			  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO user_table (user_name, user_password_hash) 
+			  VALUES (?, ?)`
 
-	_, err = DB.Exec(query, tempUser.UserName, hash, tempUser.Sex, tempUser.Birthday, tempUser.Avatar, tempUser.Role, tempUser.Email, tempUser.Phone, tempUser.Resume)
+	_, err = DB.Exec(query, tempUser.UserName, hash)
 	return err
 }
 

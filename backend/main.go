@@ -25,7 +25,7 @@ func main() {
 
 	mux := http.NewServeMux() // 创建路由器
 	RegisterMux(mux)          // 注册路由
-	fmt.Println(db.HashPassword("123456"))
+	fmt.Println(db.HashPassword("123"))
 	fmt.Println("Server started at :8888")
 	http.ListenAndServe(":8888", mux) // 启动服务器
 }

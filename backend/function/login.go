@@ -6,6 +6,7 @@ import (
 	"backend/restful"
 	"backend/structTypes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -41,9 +42,8 @@ func LoginCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var user *structTypes.User
-
 	user, err = db.GetUserByUsername(userL.UserName)
-
+	fmt.Println("获取用户信息:", user)
 	if err != nil || user == nil {
 		log.Println("用户名不存在")
 		restful.RespondWithError(w, http.StatusUnauthorized, "用户名或密码错误")
