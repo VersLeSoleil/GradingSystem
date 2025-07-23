@@ -5,13 +5,13 @@ import Error404 from '../view/error404.vue'
 import Dataset from '../view/aichat.vue'
 import Grading from '../view/Grading.vue'
 import ModelDetail from '../view/ModelDetail.vue'
-import Profile from '../view/profile.vue'
+import Profile from '../view/components/userInfo.vue'
 import { compile } from 'vue'
 
 const routes = [
     {
         path: '/',
-        redirect: '/home', 
+        redirect: '/login', 
     },
     {
         path: '/home',

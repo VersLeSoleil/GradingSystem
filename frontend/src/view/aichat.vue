@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { ElAvatar, ElMenu, ElMenuItem, ElInput, ElButton, ElIcon } from 'element-plus';
 import { Position } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png';
-import { callDeepSeekAPI } from '@/aiChatGen';
+import { callDeepSeekAPI } from '@/view/tools/aiChatGen';
 import MarkdownIt from 'markdown-it';
 const router = useRouter();
 const md = new MarkdownIt();

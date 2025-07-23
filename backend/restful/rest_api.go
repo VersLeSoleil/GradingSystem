@@ -7,9 +7,10 @@ import (
 
 // 设置 CORS 头
 func SetCorsHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // 根据需要可指定域名
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173") // 根据需要可指定域名
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
 }
 

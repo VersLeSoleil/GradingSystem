@@ -15,14 +15,12 @@ function forgotman() {
 
 async function loginBrungle() {
   try {
-    
     let endpoint = 'http://localhost:8888/login';
     let method = 'POST';
     let requestBody = {
       user_name: username.value,
       password: password.value
     };
-
       // 发送请求到后端
     const response = await fetch(endpoint, {
       method: method,
@@ -40,11 +38,12 @@ async function loginBrungle() {
     // 解析响应
     const result = await response.json();
     console.log('Response Data:', result);
-
+    userStore.print();
     // 处理成功与否
     if (response.ok) {
       userStore.setAccessToken(result.access_token)
       userStore.setUserInfo(result.user)
+      userStore.print();
       alert('登录成功！');
       router.push('/home'); 
     } else {
@@ -55,46 +54,131 @@ async function loginBrungle() {
     alert(error.message) 
   }
 }
+
+//注册
+const registerDialogVisible = ref(false)
+const registerUsername = ref('')
+const registerPassword = ref('')
+const confirmPassword = ref('')
+const sex = ref('')
+const birthday=ref('')
+
+
+
+function openRegisterDialog() {
+  registerDialogVisible.value = true
+}
+
+function closeRegisterDialog() {
+  registerDialogVisible.value = false
+  registerUsername.value = ''
+  registerPassword.value = ''
+  confirmPassword.value = ''
+}
+
+async function registerUser() {
+  if (!registerUsername.value || !registerPassword.value) {
+    alert('请输入用户名和密码')
+    return
+  }
+  if (registerPassword.value !== confirmPassword.value) {
+    alert('两次输入的密码不一致')
+    return
+  }
+  try {
+    let endpoint = 'http://localhost:8888/register';
+    let method = 'POST';
+    let requestBody = {
+      register_username: registerUsername.value,
+      register_password: registerPassword.value
+    };
+      // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      credentials: 'include', 
+    });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+    userStore.print();
+    // 处理成功与否
+    if (response.ok) {
+      userStore.setAccessToken(result.access_token)
+      userStore.setUserInfo(result.user)
+      userStore.print();
+      alert('登录成功！');
+      router.push('/home'); 
+    } else {
+      // 错误处理
+      alert(result.error || '登录失败！');
+    }
+  } catch (error) {
+    alert(error.message) 
+  }
+  alert(`注册成功！用户名: ${registerUsername.value}`)
+  closeRegisterDialog()
+}
 </script>
 
 
 
 <template>
   <div id="login-container">
-<h1 class="login-title">欢迎使用超声影像智能分级系统</h1>
-<br>
-<br>
-  <div class="wrapper">
-    
-    <form @submit.prevent="loginBrungle">
-      <h1>Login</h1>
-      <div class="input-box">
-        <i class="fas fa-envelope icon"></i>
-        <input id="usernameInput" v-model="username" type="text" required />
-        <label>Username</label>
+    <h1 class="login-title">欢迎使用超声影像智能分级系统</h1>
+    <br>
+    <br>
+      <div class="wrapper">
+        <form @submit.prevent="loginBrungle">
+          <h1>Login</h1>
+          <div class="input-box">
+            <i class="fas fa-envelope icon"></i>
+            <input id="usernameInput" v-model="username" type="text" required />
+            <label>Username</label>
+          </div>
+          <div class="input-box">
+            <i class="fas fa-lock icon"></i>
+            <input id="passwordInput" v-model="password" type="password" required />
+            <label>Password</label>
+          </div>
+          <div class="row">
+            <a href="#" @click.prevent="forgotman">Forgot password?</a>
+          </div>
+          <button class="btn" type="submit">Login</button>
+          <div class="signup-link">
+            <p>Don't have an account? <a href="#" @click.prevent="openRegisterDialog">Create one.</a></p>
+          </div>
+        </form>
       </div>
-      <div class="input-box">
-        <i class="fas fa-lock icon"></i>
-        <input id="passwordInput" v-model="password" type="password" required />
-        <label>Password</label>
-      </div>
-      <div class="row">
-        <a href="#" @click.prevent="forgotman">Forgot password?</a>
-      </div>
-      <button class="btn" type="submit">Login</button>
-      <div class="signup-link">
-        <p>Don't have an account? <a href="#">Create one.</a></p>
-      </div>
-    </form>
   </div>
-  </div>
+  <el-dialog v-model="registerDialogVisible" title="注册账号" width="400px" :before-close="closeRegisterDialog">
+    <div style="display: flex; flex-direction: column; gap: 16px; padding: 8px 0;">
+      <el-input v-model="registerUsername" placeholder="请输入用户名" />
+      <el-input v-model="registerPassword" placeholder="请输入密码" show-password />
+      <el-input v-model="confirmPassword" placeholder="请再次输入密码" show-password />
+      <el-input v-model="sex" placeholder="请" show-password />
+
+      <div style="text-align: right;">
+        <el-button @click="closeRegisterDialog">取消</el-button>
+        <el-button type="primary" @click="registerUser">注册</el-button>
+      </div>
+    </div>
+  </el-dialog>
   
 </template>
 
 
 
 <style scoped>
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/all.min.css');
 * {
   font-family: "Poppins", sans-serif;
   margin: 0;

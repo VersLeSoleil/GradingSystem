@@ -12,7 +12,7 @@ const modelConfig = {
 const openai = new OpenAI({
   baseURL: modelConfig['deepseek-chat'].baseURL,
   apiKey: modelConfig['deepseek-chat'].apiKey,
-  dangerouslyAllowBrowser: true // ⚠️ 仅限开发测试，生产环境必须用后端代理
+  dangerouslyAllowBrowser: true //仅限开发测试，生产环境必须用后端代理
 });
 
 export async function callDeepSeekAPI(prompt, chatHistory) {

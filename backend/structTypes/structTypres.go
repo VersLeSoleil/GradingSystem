@@ -49,17 +49,3 @@ type User struct {
 	Resume       string
 	CreatedDate  time.Time
 }
-
-func CopyUserToUserInfo(u *User) UserInfo {
-	return UserInfo{
-		UserName:    u.UserName,
-		Sex:         u.Sex,
-		Birthday:    u.Birthday.Format("2006-01-02"),
-		Avatar:      u.Avatar,
-		Role:        u.Role,
-		Email:       u.Email,
-		Phone:       u.Phone,
-		Resume:      u.Resume,
-		CreatedDate: u.CreatedDate,
-	}
-}
