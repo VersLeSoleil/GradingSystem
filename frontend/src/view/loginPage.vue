@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import {useUserStore} from '@/stores/user';
+import {useUserStore} from '@/store/user';
 //import {axios} from 'axios';
 
 const username = ref('');

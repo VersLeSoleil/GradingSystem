@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Delete,ZoomIn} from '@element-plus/icons-vue'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElUpload, ElSelect, ElOption, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import logoImg from '@/assets/logo.png'
+import axios from 'axios'
 const router = useRouter()
 
 // 顶部导航菜单
@@ -21,19 +23,44 @@ function goToProfile() {
 }
 // 可选模型列表
 const models = [
-  { value: 'GoogleNet', label: 'GoogleNet', desc: '高准确率甲状腺分级AI模型' },
-  { value: 'breast', label: '乳腺癌辅助诊断', desc: '乳腺癌影像分级智能模型' },
-  { value: 'liver', label: '肝脏肿瘤分级', desc: '肝脏肿瘤分级AI模型' },
-  { value: 'lung', label: '肺结节检测', desc: '肺结节分级与检测一体化模型' },
+  { value: '1', label: '随机森林+逻辑回归', desc: '随机森林搭配逻辑回归模型的综合性解决方案' },
+  { value: '2', label: 'GoogleNet', desc: '高准确率甲状腺分级AI模型' },
+  { value: '3', label: '乳腺癌辅助诊断', desc: '乳腺癌影像分级智能模型' },
+  { value: '4', label: '肝脏肿瘤分级', desc: '肝脏肿瘤分级AI模型' },
+  { value: '5', label: '肺结节检测', desc: '肺结节分级与检测一体化模型' },
 ]
 const selectedModel = ref(models[0].value)
 
 // 上传文件
 const fileList = ref([])
-const handleUploadSuccess = () => {
-  ElMessage.success('上传成功！')
-  // 这里可触发后端推理请求
+const handleUploadSuccess = async () => {
+  if (fileList.value.length === 0) {
+    ElMessage.warning('请先上传至少一张图片')
+    return
+  }
+  const formData = new FormData()
+  fileList.value.forEach(file => {
+    formData.append('files', file.raw)  // 假设后端接收字段名为 "files"
+  })
+
+  try {
+    const response = await axios.post('http://127.0.0.1:8080/predict', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    // 
+    resultTable.value = response.data.results  // 假设后端返回的是 { results: [{ name, result, score }] }
+    ElMessage.success('预测完成！')
+
+  } catch (error) {
+    console.error('上传或预测失败:', error)
+    ElMessage.error('上传失败，请重试')
+  }
 }
+
+
 const handleRemove = (file, uploadFiles) => {
   console.log(file, uploadFiles);
   // 你可以在这里添加自定义删除逻辑
@@ -108,7 +135,7 @@ const resultTable = ref([
         <!-- 左侧区域 (1/2宽度) -->
         <div style="flex: 1; display: flex; flex-direction: column; gap: 24px;">
           <!-- 模型选择卡片 -->
-          <el-card shadow="hover" style="flex: 1;">
+          <el-card shadow="hover" style="flex: 1; min-height: 250px;">
             <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">选择模型</div>
             <el-select v-model="selectedModel" placeholder="请选择模型" style="width: 100%;">
               <el-option v-for="m in models" :key="m.value" :label="m.label" :value="m.value" />
@@ -117,6 +144,7 @@ const resultTable = ref([
               <div style="font-size: 16px; font-weight: bold;">{{ modelTitle }}</div>
               <div style="color: #888; margin-top: 4px;">{{ modelDesc }}</div>
             </div>
+            <el-button type="primary" style="margin-top: 15px; margin-left:500px;"  @click="handleUploadSuccess">开始预测</el-button>
           </el-card>
           
           <!-- 结果预览卡片 -->
