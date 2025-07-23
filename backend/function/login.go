@@ -32,7 +32,6 @@ func LoginCheck(w http.ResponseWriter, r *http.Request) {
 		restful.RespondWithError(w, http.StatusBadRequest, "无法读取请求体")
 		return
 	}
-	log.Printf("接收到的原始数据: %s", string(bodyBytes))
 
 	var userL structTypes.UserLogin
 
@@ -41,10 +40,15 @@ func LoginCheck(w http.ResponseWriter, r *http.Request) {
 		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
 		return
 	}
-
 	var user *structTypes.User
 
 	user, err = db.GetUserByUsername(userL.UserName)
+
+	if err != nil || user == nil {
+		log.Println("用户名不存在")
+		restful.RespondWithError(w, http.StatusUnauthorized, "用户名或密码错误")
+		return
+	}
 
 	if !db.CheckPasswordHash(userL.Password, user.PasswordHash) {
 		log.Println("密码验证失败")
@@ -53,11 +57,18 @@ func LoginCheck(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accessToken, refreshToken, err := jwt.GenerateTokens(user.UserName, user.Role)
-
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		HttpOnly: true,
+		Secure:   false, //!!
+		Path:     "/",
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   7 * 24 * 60 * 60,
+	})
 	resp := map[string]interface{}{
-		"user":          user,
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"user":         user,
+		"access_token": accessToken,
 	}
 	// var userInfoBack structTypes.UserInfo
 	// userInfoBack = structTypes.CopyUserToUserInfo(user)

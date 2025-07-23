@@ -2,19 +2,29 @@ package main
 
 import (
 	"backend/db"
+	"backend/function"
 	"fmt"
+	"net/http"
 )
 
-func main() {
-	db.InitDB("config.yaml")
-	user, err := db.GetUserByUsername("bob22")
-	if err != nil {
-		panic(err)
-	}
-	if user == nil {
-		fmt.Println("未找到 admin 用户")
-	} else {
-		fmt.Printf("User: %s, Role: %s, Email: %s\n", user.UserName, user.Role, user.Email)
-	}
+func RegisterMux(mux *http.ServeMux) {
 
+	mux.HandleFunc("/login", function.LoginCheck)
+
+}
+
+func initDATABase() {
+
+	db.InitDB("config.yaml")
+
+}
+
+func main() {
+	initDATABase() // 初始化数据库
+
+	mux := http.NewServeMux() // 创建路由器
+	RegisterMux(mux)          // 注册路由
+	fmt.Println(db.HashPassword("123456"))
+	fmt.Println("Server started at :8888")
+	http.ListenAndServe(":8888", mux) // 启动服务器
 }
