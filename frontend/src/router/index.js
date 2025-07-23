@@ -3,7 +3,7 @@ import homePage from '../view/homePage.vue'
 import LoginPage from '../view/loginPage.vue'
 import Error404 from '../view/error404.vue'
 import Dataset from '../view/aichat.vue'
-import Online from '../view/Grading.vue'
+import Grading from '../view/Grading.vue'
 import ModelDetail from '../view/ModelDetail.vue'
 import Profile from '../view/profile.vue'
 import { compile } from 'vue'
@@ -35,9 +35,9 @@ const routes = [
         component: Dataset
     },
     {
-        path:'/online',
-        name: 'OnlineGrading',
-        component: Online
+        path:'/my-model',
+        name: 'MyModel',
+        component: Grading
     },
     {
         path: '/model/:id',

@@ -85,6 +85,65 @@
       </div>
     </el-main>
   </el-container>
+
+  <el-tooltip content="我要发帖" placement="top">
+  <el-button
+    class="fab"
+    type="primary"
+    circle
+    @click="dialogVisible = true"
+  >
+    <span style="font-size: 20px">+</span>
+  </el-button>
+</el-tooltip>
+
+<!-- 发帖弹窗 -->
+<el-dialog
+  v-model="dialogVisible"
+  title="我要分享"
+  width="700px"
+  height="700px"
+  :before-close="handleClose"
+>
+  <el-form :model="postForm" label-width="80px">
+    <el-form-item label="标题">
+      <el-input v-model="postForm.title" placeholder="标题" />
+    </el-form-item>
+    <el-form-item label="描述">
+      <el-input v-model="postForm.describe" placeholder="描述" />
+    </el-form-item>
+    <el-form-item label="标签">
+    <el-select
+      v-model="postForm.tags"
+      multiple
+      placeholder="请选择标签,可多选"
+      style="width: 100%"
+    >
+      <el-option
+        v-for="tag in tagOptions"
+        :key="tag.value"
+        :label="tag.label"
+        :value="tag.value"
+      />
+    </el-select>
+  </el-form-item>
+
+    <el-form-item label="内容">
+      <el-input
+        type="textarea"
+        v-model="postForm.content"
+        rows="15"
+        placeholder="请输入内容"
+      />
+    </el-form-item>
+  </el-form>
+
+  <template #footer>
+    <el-button @click="dialogVisible = false">取消</el-button>
+    <el-button type="primary" @click="submitPost">发布</el-button>
+  </template>
+</el-dialog>
+
 </template>
 
 <script setup>
@@ -130,6 +189,66 @@ function goToModelDetail(model) {
 function goToProfile() {
   router.push('/profile')
 }
+
+// 发帖弹窗逻辑
+const dialogVisible = ref(false)
+const tagOptions = [
+  { label: '深度学习', value: 'deep_learning' },
+  { label: '机器学习', value: 'machine_learning' },
+  { label: '乳腺癌', value: 'breast_cancer' },
+  { label: '肺结节', value: 'lung_nodule' },
+  { label: '肝脏', value: 'liver_tumor' },
+  { label: '脑肿瘤', value: 'brain_tumor' }
+]
+const postForm = ref({
+  title: '',
+  describe: '',
+  tags: [],
+  content: ''
+})
+function handleClose() {
+  dialogVisible.value = false
+}
+
+function submitPost() {
+  console.log('用户发帖内容：', postForm.value)
+  if (!postForm.value.title || !postForm.value.content) {
+    ElMessage.error('请填写标题和内容')
+    return
+  }
+  const postData = {
+    title: postForm.value.title,
+    description: postForm.value.describe,
+    tags: postForm.value.tags,
+    content: postForm.value.content,
+    // 可以添加其他需要的字段，如用户ID、时间戳等
+    createdAt: new Date().toISOString()
+  }
+  axios.post('https://your-api-endpoint.com/posts', postData, {
+    headers: {
+      'Content-Type': 'application/json',
+      // 如果需要认证，可以添加token
+      // 'Authorization': `Bearer ${yourToken}`
+    }
+  })
+  .then(response => {
+    ElMessage.success('发布成功！')
+    console.log('发布成功:', response.data)
+    // 清空表单
+    postForm.value = { 
+      title: '', 
+      describe: '', 
+      tags: [], 
+      content: '' 
+    }
+    dialogVisible.value = false
+  })
+  .catch(error => {
+    ElMessage.error('发布失败，请重试')
+    console.error('发布失败:', error)
+  })
+}
+
 </script>
 
 <style scoped>
@@ -256,5 +375,21 @@ function goToProfile() {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 弹窗美化 */
+.fab {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
 }
 </style>
