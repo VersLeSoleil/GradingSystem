@@ -2,16 +2,15 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTree, ElButton } from 'element-plus'
-
+import logoImg from '@/assets/logo.png'
 const router = useRouter()
 const route = useRoute()
 
 // 顶部导航菜单
 const navMenus = [
-  { index: '/home', label: '模型库', icon: 'i-ep-house' },
-  { index: '/dataset', label: '数据集', icon: 'i-ep-user' },
-  { index: '/online', label: '在线分级', icon: 'i-ep-document' },
-  { index: '/history', label: '历史记录', icon: 'i-ep-setting' },
+  { index: '/home', label: '模型广场' },
+  { index: '/aichat', label: 'ai助手' },
+  { index: '/my-model', label: '在线分级' },
 ]
 const activeMenu = ref('/home')
 
@@ -26,22 +25,6 @@ const categories = [
 ]
 const selectedCategory = ref('全部')
 
-// 模型数据（id改为英文唯一名）
-const models = [
-  { id: 'GoogleNet', name: 'GoogleNet', desc: '高准确率甲状腺分级AI模型', category: '甲状腺分级', author: 'Google' },
-  { id: 'breast_cancer', name: '乳腺癌辅助诊断', desc: '乳腺癌影像分级智能模型', category: '乳腺癌分级', author: 'MedAI' },
-  { id: 'lung_nodule', name: '肺结节检测', desc: '肺结节分级与检测一体化模型', category: '肺结节分级', author: 'AI Health' },
-  { id: 'liver_tumor', name: '肝脏肿瘤分级', desc: '肝脏肿瘤分级AI模型', category: '肝脏分级', author: 'AI Lab' },
-  { id: 'brain_tumor', name: '脑肿瘤分级', desc: '脑肿瘤影像分级模型', category: '脑肿瘤分级', author: 'MedAI'},
-]
-
-const modelId = computed(() => route.params.id)
-const model = computed(() => models.find(m => m.id === modelId.value))
-
-const filteredModels = computed(() => {
-  if (selectedCategory.value === '全部') return models
-  return models.filter(m => m.category === selectedCategory.value)
-})
 
 function handleMenuSelect(index) {
   activeMenu.value = index
@@ -51,27 +34,6 @@ function handleMenuSelect(index) {
 function goBack() {
   router.back()
 }
-
-// 模拟github文件树
-const fileTree = ref([
-  {
-    label: 'model/',
-    children: [
-      { label: 'README.md' },
-      { label: 'main.py' },
-      { label: 'requirements.txt' },
-      {
-        label: 'src/',
-        children: [
-          { label: 'model.py' },
-          { label: 'utils.py' },
-        ]
-      },
-      { label: 'data/' },
-    ]
-  }
-])
-const treeProps = { children: 'children', label: 'label' }
 
 // 讨论区模拟
 const comments = ref([
@@ -100,59 +62,48 @@ function handleSelect(key) {
 <template>
   <el-container style="min-height: 100vh; background: #f6f8fa; flex-direction: column;">
     <!-- 顶部导航栏 -->
-    <el-header height="64px" style="background: #409EFF; color: #fff; display: flex; align-items: center; padding: 0 32px;">
-      <div style="font-size: 20px; font-weight: bold; margin-right: 32px;">疾病影像智能分级系统</div>
-      <el-input placeholder="搜索..." clearable style="width: 300px; margin-right: 32px;" prefix-icon="el-icon-search" />
-      <el-menu :default-active="activeMenu" mode="horizontal" background-color="#409EFF" text-color="#fff" active-text-color="#ffd04b" @select="handleMenuSelect" style="flex: 1; min-width: 500px; border-bottom: none;">
-        <el-menu-item v-for="item in navMenus" :key="item.index" :index="item.index">
-          <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
-          {{ item.label }}
-        </el-menu-item>
-      </el-menu>
-      <el-avatar size="40" src="https://element-plus.org/images/element-plus-logo.svg" style="margin-left: 32px; background: #fff;" />
+    <el-header
+      height="64px"
+      style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);"
+    >
+      <div style="display: flex; align-items: center; flex-shrink: 0;">
+        <img :src="logoImg" alt="logo" style="width: 32px; height: 32px; margin-right: 12px" />
+        <div style="font-weight: 600; font-size: 18px">
+          分级喵 <span style="color: #999; font-size: 14px; margin-left: 4px">Image Grading System</span>
+        </div>
+      </div>
+      <div
+    style="
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      white-space: nowrap;
+    "
+  >
+    <el-menu
+      :default-active="activeMenu"
+      mode="horizontal"
+      :ellipsis="false"
+      background-color="transparent"
+      text-color="#333"
+      active-text-color="#CD5C5C"
+      @select="handleMenuSelect"
+      style="border-bottom: none"
+    >
+      <el-menu-item v-for="item in navMenus" :key="item.index" :index="item.index">
+        {{ item.label }}
+      </el-menu-item>
+    </el-menu>
+  </div>
+      
+      <el-avatar size="36" src="https://element-plus.org/images/element-plus-logo.svg" @click="goToProfile" style="cursor: pointer" />
     </el-header>
     <el-main style="padding: 32px 0 0 0; background: #f6f8fa;">
       <!-- 1. 模型简介 -->
       <el-card>
-        <div v-if="model" class="model-intro-card">
-          <div style="display: flex; align-items: center;">
-            <div style="flex: 1;">
-              <div style="font-size: 50px; font-weight: bold;">{{ model.name }}</div>
-              <div style="color: #888; margin: 4px 0;">{{ model.desc }}</div>
-              <el-tag size="small" type="info">{{ model.category }}</el-tag>
-            </div>
-            <div style="margin-left: 16px; color: #409EFF;">{{ model.author }}</div>
-          </div>
-        </div>
-        <div v-else class="model-intro-card" style="text-align:center;">未找到该模型</div>
-        <el-divider />
-        <el-menu
-          :default-active="activeIndex"
-          class="el-menu-demo"
-          mode="horizontal"
-          @select="handleSelect"
-          style="margin-bottom: 24px; border-radius: 8px; background: #fff; box-shadow: 0 2px 8px #f0f1f2;"
-        >
-          <el-menu-item index="readme">README</el-menu-item>
-          <el-menu-item index="tree">File</el-menu-item>
-        </el-menu>
-        <div class="model-tree-card">
-          <div v-if="activeIndex === 'readme'" style="font-size: 16px; font-family: monospace; white-space: pre-wrap; background: #f8f8f8; padding: 24px; border-radius: 8px; min-height: 200px;">
-            <div style="font-size: 18px; font-weight: bold; margin-bottom: 12px;">README.md</div>
-            <div>{{ readmeContent }}</div>
-          </div>
-          <div v-else>
-            
-            <el-tree
-              :data="fileTree"
-              :props="treeProps"
-              accordion
-              highlight-current
-              default-expand-all
-              style="background: #f6f8fa;"
-            />
-          </div>
-        </div>
+        
       </el-card>
       <!-- 3. 讨论区 -->
       <el-card class="model-discuss-card">
