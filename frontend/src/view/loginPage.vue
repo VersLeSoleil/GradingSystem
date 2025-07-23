@@ -61,7 +61,7 @@ async function loginBrungle() {
 
 <template>
   <div id="login-container">
-<h1 class="login-title">欢迎登陆超声影像智能分级系统</h1>
+<h1 class="login-title">欢迎使用超声影像智能分级系统</h1>
 <br>
 <br>
   <div class="wrapper">

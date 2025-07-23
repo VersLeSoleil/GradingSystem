@@ -16,7 +16,7 @@ const activeMenu = ref('/online')
 
 // 可选模型列表
 const models = [
-  { value: 'thyroid', label: '甲状腺AI分级模型', desc: '高准确率甲状腺分级AI模型' },
+  { value: 'GoogleNet', label: 'GoogleNet', desc: '高准确率甲状腺分级AI模型' },
   { value: 'breast', label: '乳腺癌辅助诊断', desc: '乳腺癌影像分级智能模型' },
   { value: 'liver', label: '肝脏肿瘤分级', desc: '肝脏肿瘤分级AI模型' },
   { value: 'lung', label: '肺结节检测', desc: '肺结节分级与检测一体化模型' },
@@ -51,7 +51,7 @@ const resultTable = ref([
   <el-container style="height: 100vh;width: 100%;">
     <!-- 顶部导航栏 -->
     <el-header height="64px" style="background: #409EFF; color: #fff; display: flex; align-items: center; padding: 0 32px;">
-      <div style="font-size: 20px; font-weight: bold; margin-right: 32px;">疾病智能分级系统</div>
+      <div style="font-size: 20px; font-weight: bold; margin-right: 32px;">疾病影像智能分级系统</div>
       <el-input placeholder="搜索..." clearable style="width: 300px; margin-right: 32px;" prefix-icon="el-icon-search" />
       <el-menu :default-active="activeMenu" mode="horizontal" background-color="#409EFF" text-color="#fff" active-text-color="#ffd04b" style="flex: 1; min-width: 500px; border-bottom: none;">
         <el-menu-item v-for="item in navMenus" :key="item.index" :index="item.index" @click="router.push(item.index)">

@@ -2,14 +2,16 @@ import{createRouter, createWebHistory} from 'vue-router'
 import homePage from '../view/homePage.vue'
 import LoginPage from '../view/loginPage.vue'
 import Error404 from '../view/error404.vue'
-import Dataset from '../view/Dataset.vue'
+import Dataset from '../view/aichat.vue'
 import Online from '../view/Grading.vue'
+import ModelDetail from '../view/ModelDetail.vue'
+import Profile from '../view/profile.vue'
 import { compile } from 'vue'
 
 const routes = [
     {
         path: '/',
-        redirect: '/login', 
+        redirect: '/home', 
     },
     {
         path: '/home',
@@ -28,14 +30,24 @@ const routes = [
         hidden: true,
     },
     {
-        path:'/dataset',
-        name: 'Dataset',
+        path:'/aichat',
+        name: 'AIChat',
         component: Dataset
     },
     {
         path:'/online',
         name: 'OnlineGrading',
         component: Online
+    },
+    {
+        path: '/model/:id',
+        name: 'ModelDetail',
+        component: ModelDetail
+    },
+    {
+        path:'/profile',
+        name: 'Profile',
+        component:Profile
     }
 ]
 
