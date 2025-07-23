@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"backend/restful"
+	"encoding/json"
 	"net/http"
 	"os"
 	"strings"
@@ -58,5 +59,38 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 		// 可以把 claims 存到 context 里，供后续 handler 使用
 		next.ServeHTTP(w, r)
+	})
+}
+
+func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		http.Error(w, "No refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	refreshToken := cookie.Value
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKeyRefresh, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	username, _ := claims["username"].(string)
+	role, _ := claims["role"].(string)
+
+	accessToken, _, err := GenerateTokens(username, role)
+	if err != nil {
+		http.Error(w, "Token generation failed", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"access_token": accessToken,
 	})
 }

@@ -1,41 +1,62 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import {useUserStore} from '@/stores/user';
+//import {axios} from 'axios';
+
 const username = ref('');
 const password = ref('');
+const router = useRouter();
+const userStore = useUserStore();
 
 function forgotman() {
   alert('Please email ssnigdhasiraz22@sirhenryfloyd.co.uk to request a password reset');
 }
 
-function loginBrungle() {
-  fetch('/api/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username: username.value,
-      password: password.value,
-    }),
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      //const data = await response.json();
-      if (true) {
-        alert('登录成功！');
-        // 这里可以跳转到主页面或保存 token
-        this.$router.push('/home')
-      } else {
-        alert(data.message || '用户名或密码错误');
-      }
-    })
-    .catch((error) => {
-      alert('登录失败: ' + error.message);
+async function loginBrungle() {
+  try {
+    
+    let endpoint = 'http://localhost:8888/login';
+    let method = 'POST';
+    let requestBody = {
+      user_name: username.value,
+      password: password.value
+    };
+
+      // 发送请求到后端
+    const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      credentials: 'include', 
     });
+
+    // 调试：打印响应状态码和响应内容
+    console.log('Response Status:', response.status);
+    console.log('Response Headers:', response.headers);
+
+    // 解析响应
+    const result = await response.json();
+    console.log('Response Data:', result);
+
+    // 处理成功与否
+    if (response.ok) {
+      userStore.setAccessToken(result.access_token)
+      userStore.setUserInfo(result.user)
+      alert('登录成功！');
+      router.push('/home'); 
+    } else {
+      // 错误处理
+      alert(result.error || '登录失败！');
+    }
+  } catch (error) {
+    alert(error.message) 
+  }
 }
 </script>
+
 
 
 <template>
