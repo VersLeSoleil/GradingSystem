@@ -74,7 +74,7 @@ function handleMenuSelect(index) {
 const navMenus = [
   { index: '/home', label: '模型广场' },
   { index: '/aichat', label: 'ai助手' },
-  { index: '/my-model', label: '我的模型' },
+  { index: '/my-model', label: '在线分级' },
 ]
 </script>
 

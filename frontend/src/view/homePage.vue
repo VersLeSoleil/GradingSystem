@@ -68,17 +68,18 @@
         <!-- 卡片区域 -->
         <transition-group name="list-fade" tag="div" class="card-grid">
           <el-card
-            v-for="model in filteredModels"
-            :key="model.id"
+            v-for="post in filteredPosts"
+            :key="post.post_id"
             shadow="hover"
             class="animated-card"
-            @click="goToModelDetail(model)"
+            @click="goToPostDetail(post)"
           >
             <div>
-              <div class="card-title">{{ model.name }}</div>
-              <div class="card-desc">{{ model.desc }}</div>
-              <el-tag size="small" type="success">{{ model.category }}</el-tag>
-              <div class="card-author">{{ model.author }}</div>
+              <div class="card-title">{{ post.title }}</div>
+              <div class="card-desc">{{ post.introduction }}</div>
+              <el-tag size="small" type="success">{{ post.type_name }}</el-tag>
+              <div class="card-author">{{ post.user_name }}</div>
+              <div class="card-likes">{{ post.likes }}</div>
             </div>
           </el-card>
         </transition-group>
@@ -147,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
 
@@ -157,26 +158,42 @@ import UserInfo from './components/userInfo.vue'
 const router = useRouter()
 const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
-
+let posts = ref([])
 const navMenus = [
   { index: '/home', label: '模型广场' },
   { index: '/aichat', label: 'ai助手' },
-  { index: '/my-model', label: '我的模型' },
+  { index: '/my-model', label: '在线分级' },
 ]
 
 const categories = ['全部', '甲状腺分级', '乳腺癌分级', '肺结节分级', '肝脏分级', '脑肿瘤分级']
 
-const models = [
-  { id: 'GoogleNet', name: 'GoogleNet', desc: '高准确率甲状腺分级AI模型', category: '甲状腺分级', author: 'Google' },
-  { id: 'breast_cancer', name: '乳腺癌辅助诊断', desc: '乳腺癌影像分级智能模型', category: '乳腺癌分级', author: 'MedAI' },
-  { id: 'lung_nodule', name: '肺结节检测', desc: '肺结节分级与检测一体化模型', category: '肺结节分级', author: 'AI Health' },
-  { id: 'liver_tumor', name: '肝脏肿瘤分级', desc: '肝脏肿瘤分级AI模型', category: '肝脏分级', author: 'AI Lab' },
-  { id: 'brain_tumor', name: '脑肿瘤分级', desc: '脑肿瘤影像分级模型', category: '脑肿瘤分级', author: 'MedAI' },
-]
+onMounted(async () => {
+  try {
+    const response = await fetch('http://localhost:8888/posts', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include' // 如果你涉及到 cookie 认证
+    })
 
-const filteredModels = computed(() => {
-  if (selectedCategory.value === '全部') return models
-  return models.filter((m) => m.category === selectedCategory.value)
+    if (!response.ok) {
+      throw new Error('无法获取模型列表')
+    }
+
+    const data = await response.json()
+    posts.value = data
+  } catch (err) {
+    console.error('获取模型失败：', err)
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+})
+
+const filteredPosts = computed(() => {
+  if (selectedCategory.value === '全部') return posts
+  return posts.filter((m) => m.category === selectedCategory.value)
 })
 
 function handleMenuSelect(index) {
@@ -184,8 +201,36 @@ function handleMenuSelect(index) {
   router.push(index)
 }
 
-function goToModelDetail(model) {
-  router.push({ path: `/model/${model.id}` })
+async function goToPostDetail(post) {
+  try {
+    const response = await fetch(`http://localhost:8888/getPost?id=${post.id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include' // 如果你需要发送 cookie
+    })
+
+    if (!response.ok) {
+      throw new Error('获取帖子详情失败')
+    }
+
+    const data = await response.json()
+    console.log('获取到的模型信息：', data)
+
+    // 假设你需要把 data 传给下一个页面，可以通过 query 或 store
+    router.push({
+      path: `/model/${model.id}`,
+      query: {
+        postid: data.postid,
+        type: data.type_name
+      }
+    })
+    
+  } catch (error) {
+    console.error('请求失败:', error)
+    alert('获取模型详情失败，请稍后再试')
+  }
 }
 
 const userInfoRef = ref(null)
