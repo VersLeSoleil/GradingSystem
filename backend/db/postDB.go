@@ -22,7 +22,7 @@ func CreatedPost(post structTypes.PostInfo) error {
 }
 
 func GetPostByUsername(username string) ([]structTypes.Post, error) {
-	query := `SELECT post_id, type_name, user_name, title, introduction, content, created_date, updated_date, is_public FROM post_table WHERE user_name = ?`
+	query := `SELECT post_id, type_name, user_name, title, introduction, content, created_date, updated_date, is_public, likes FROM post_table WHERE user_name = ?`
 	rows, err := DB.Query(query, username)
 	if err != nil {
 		return nil, fmt.Errorf("获取用户帖子失败: %w", err)
@@ -32,7 +32,7 @@ func GetPostByUsername(username string) ([]structTypes.Post, error) {
 	var posts []structTypes.Post
 	for rows.Next() {
 		var p structTypes.Post
-		if err := rows.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Content, &p.CreatedDate, &p.UpdatedDate, &p.IsPublic); err != nil {
+		if err := rows.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Content, &p.CreatedDate, &p.UpdatedDate, &p.IsPublic, &p.Likes); err != nil {
 			return nil, fmt.Errorf("扫描帖子数据失败: %w", err)
 		}
 		posts = append(posts, p)
@@ -59,12 +59,12 @@ func DeletePostByID(postID int) error {
 }
 
 func GetPostByID(postID int) (*structTypes.Post, error) {
-	query := `SELECT post_id, type_name, user_name, title, introduction, content, created_date, updated_date, is_public 
+	query := `SELECT post_id, type_name, user_name, title, introduction, content, created_date, updated_date, is_public, likes 
 			  FROM post_table WHERE post_id = ?`
 	row := DB.QueryRow(query, postID)
 
 	var p structTypes.Post
-	err := row.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Introduction, &p.Content, &p.CreatedDate, &p.UpdatedDate, &p.IsPublic)
+	err := row.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Introduction, &p.Content, &p.CreatedDate, &p.UpdatedDate, &p.IsPublic, &p.Likes)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // 帖子不存在
@@ -75,7 +75,7 @@ func GetPostByID(postID int) (*structTypes.Post, error) {
 }
 
 func GetAllPosts() ([]structTypes.Post, error) {
-	query := `SELECT post_id, type_name, user_name, title, introduction, content, created_date, updated_date, is_public 
+	query := `SELECT post_id, type_name, user_name, title, introduction, content, created_date, updated_date, is_public, likes 
               FROM post_table 
               ORDER BY created_date DESC`
 
@@ -89,7 +89,7 @@ func GetAllPosts() ([]structTypes.Post, error) {
 	for rows.Next() {
 		var p structTypes.Post
 		if err := rows.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Introduction, &p.Content,
-			&p.CreatedDate, &p.UpdatedDate, &p.IsPublic); err != nil {
+			&p.CreatedDate, &p.UpdatedDate, &p.IsPublic, &p.Likes); err != nil {
 			return nil, fmt.Errorf("扫描帖子数据失败: %w", err)
 		}
 		posts = append(posts, p)

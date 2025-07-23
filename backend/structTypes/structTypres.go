@@ -76,4 +76,5 @@ type Post struct {
 	CreatedDate  time.Time `json:"created_date"`
 	UpdatedDate  time.Time `json:"updated_date"`
 	IsPublic     bool      `json:"is_public"`
+	Likes        int       `json:"likes"`
 }
