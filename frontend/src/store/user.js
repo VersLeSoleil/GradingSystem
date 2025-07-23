@@ -1,4 +1,3 @@
-// stores/user.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -19,11 +18,17 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = null
   }
 
+  function print() {
+    console.log('Access Token:', accessToken.value)
+    console.log('User Info:', userInfo.value)
+  }
+
   return {
     accessToken,
     userInfo,
     setAccessToken,
     setUserInfo,
-    logout
+    logout,
+    print
   }
 })

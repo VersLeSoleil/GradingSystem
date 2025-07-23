@@ -66,12 +66,12 @@ func LoginCheck(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   7 * 24 * 60 * 60,
 	})
+	user.PasswordHash = "" // 清除密码哈希，避免泄露
 	resp := map[string]interface{}{
 		"user":         user,
 		"access_token": accessToken,
 	}
-	// var userInfoBack structTypes.UserInfo
-	// userInfoBack = structTypes.CopyUserToUserInfo(user)
+
 	log.Printf("用户 %s 登录成功", userL.UserName)
 	restful.RespondWithSuccess(w, resp)
 }

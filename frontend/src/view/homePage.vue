@@ -37,7 +37,7 @@
     </el-menu>
   </div>
       
-      <el-avatar size="36" src="https://element-plus.org/images/element-plus-logo.svg" @click="goToProfile" style="cursor: pointer" />
+      <el-avatar size="large" src="https://element-plus.org/images/element-plus-logo.svg" @click="showUserInfo" style="cursor: pointer" />
     </el-header>
 
     <!-- 搜索框区域 -->
@@ -87,63 +87,63 @@
   </el-container>
 
   <el-tooltip content="我要发帖" placement="top">
-  <el-button
-    class="fab"
-    type="primary"
-    circle
-    @click="dialogVisible = true"
-  >
-    <span style="font-size: 20px">+</span>
-  </el-button>
-</el-tooltip>
-
-<!-- 发帖弹窗 -->
-<el-dialog
-  v-model="dialogVisible"
-  title="我要分享"
-  width="700px"
-  height="700px"
-  :before-close="handleClose"
->
-  <el-form :model="postForm" label-width="80px">
-    <el-form-item label="标题">
-      <el-input v-model="postForm.title" placeholder="标题" />
-    </el-form-item>
-    <el-form-item label="描述">
-      <el-input v-model="postForm.describe" placeholder="描述" />
-    </el-form-item>
-    <el-form-item label="标签">
-    <el-select
-      v-model="postForm.tags"
-      multiple
-      placeholder="请选择标签,可多选"
-      style="width: 100%"
+    <el-button
+      class="fab"
+      type="primary"
+      circle
+      @click="dialogVisible = true"
     >
-      <el-option
-        v-for="tag in tagOptions"
-        :key="tag.value"
-        :label="tag.label"
-        :value="tag.value"
-      />
-    </el-select>
-  </el-form-item>
+      <span style="font-size: 20px">+</span>
+    </el-button>
+  </el-tooltip>
 
-    <el-form-item label="内容">
-      <el-input
-        type="textarea"
-        v-model="postForm.content"
-        rows="15"
-        placeholder="请输入内容"
-      />
+  <!-- 发帖弹窗 -->
+  <el-dialog
+    v-model="dialogVisible"
+    title="我要分享"
+    width="700px"
+    height="700px"
+    :before-close="handleClose"
+  >
+    <el-form :model="postForm" label-width="80px">
+      <el-form-item label="标题">
+        <el-input v-model="postForm.title" placeholder="标题" />
+      </el-form-item>
+      <el-form-item label="描述">
+        <el-input v-model="postForm.describe" placeholder="描述" />
+      </el-form-item>
+      <el-form-item label="标签">
+      <el-select
+        v-model="postForm.tags"
+        multiple
+        placeholder="请选择标签,可多选"
+        style="width: 100%"
+      >
+        <el-option
+          v-for="tag in tagOptions"
+          :key="tag.value"
+          :label="tag.label"
+          :value="tag.value"
+        />
+      </el-select>
     </el-form-item>
-  </el-form>
 
-  <template #footer>
-    <el-button @click="dialogVisible = false">取消</el-button>
-    <el-button type="primary" @click="submitPost">发布</el-button>
-  </template>
-</el-dialog>
+      <el-form-item label="内容">
+        <el-input
+          type="textarea"
+          v-model="postForm.content"
+          rows="15"
+          placeholder="请输入内容"
+        />
+      </el-form-item>
+    </el-form>
 
+    <template #footer>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="submitPost">发布</el-button>
+    </template>
+  </el-dialog>
+  <UserInfo ref="userInfoRef" />
 </template>
 
 <script setup>
@@ -152,6 +152,8 @@ import { useRouter } from 'vue-router'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
 
 import logoImg from '@/assets/logo.png'
+import UserInfo from './components/userInfo.vue'
+
 const router = useRouter()
 const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
@@ -186,8 +188,10 @@ function goToModelDetail(model) {
   router.push({ path: `/model/${model.id}` })
 }
 
-function goToProfile() {
-  router.push('/profile')
+const userInfoRef = ref(null)
+function showUserInfo() {
+  console.log('userInfoRef:', userInfoRef.value)
+  userInfoRef.value.openDialog()
 }
 
 // 发帖弹窗逻辑

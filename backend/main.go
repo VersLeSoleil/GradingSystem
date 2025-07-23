@@ -10,6 +10,7 @@ import (
 func RegisterMux(mux *http.ServeMux) {
 
 	mux.HandleFunc("/login", function.LoginCheck)
+	mux.HandleFunc("/register", function.RegisterUser)
 
 }
 

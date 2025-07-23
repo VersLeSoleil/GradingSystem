@@ -27,6 +27,13 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
 		return
 	}
+	//哈希加密注册密码
+	hashedPwd, err := db.HashPassword(user.Password)
+	if err != nil {
+		restful.RespondWithError(w, http.StatusInternalServerError, "注册时密码加密失败: "+err.Error())
+		return
+	}
+	user.Password = hashedPwd
 
 	if err := db.CreateUser(user); err != nil {
 		restful.RespondWithError(w, http.StatusInternalServerError, "注册失败: "+err.Error())
