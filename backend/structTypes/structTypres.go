@@ -61,6 +61,7 @@ type PostInfo struct {
 	Title        string    `json:"title"`
 	Introduction string    `json:"introduction"`
 	Content      string    `json:"content"`
+	ModelTypes   string    `json:"model_types"`
 	CreatedDate  time.Time `json:"created_date"`
 	UpdatedDate  time.Time `json:"updated_date"`
 	IsPublic     bool      `json:"is_public"`
@@ -73,6 +74,7 @@ type Post struct {
 	Title        string    `json:"title"`
 	Introduction string    `json:"introduction"`
 	Content      string    `json:"content"`
+	ModelTypes   string    `json:"model_types"`
 	CreatedDate  time.Time `json:"created_date"`
 	UpdatedDate  time.Time `json:"updated_date"`
 	IsPublic     bool      `json:"is_public"`
