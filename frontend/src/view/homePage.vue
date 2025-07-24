@@ -37,7 +37,17 @@
     </el-menu>
   </div>
       
-      <el-avatar size="large" src="https://element-plus.org/images/element-plus-logo.svg" @click="showUserInfo" style="cursor: pointer" />
+      <el-dropdown>
+      <el-button type="primary" @click="handleLoginClick">
+        未登录<el-icon class="el-icon--right"><arrow-down /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item>编辑资料</el-dropdown-item>
+          <el-dropdown-item>退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     </el-header>
 
     <!-- 搜索框区域 -->
@@ -73,13 +83,22 @@
             shadow="hover"
             class="animated-card"
             @click="goToPostDetail(post)"
+            style="cursor: pointer; width: 300px; height: 200px; display: flex; align-items: center; justify-content: center;"
           >
             <div>
               <div class="card-title">{{ post.title }}</div>
               <div class="card-desc">{{ post.introduction }}</div>
               <el-tag size="small" type="success">{{ post.type_name }}</el-tag>
-              <div class="card-author">{{ post.user_name }}</div>
-              <div class="card-likes">{{ post.likes }}</div>
+              <div class="card-foot" style="display: flex;flex-direction: row;">
+                <div class="likes-container" style="margin-top: 10px;">
+                  <button @click="toggleLike(post)"  class="icon-button">
+                    <el-icon><Star /></el-icon>
+                  </button>
+                  <span class="likes-count">{{ post.likes }}</span>
+                </div>
+                <div class="card-author" style="margin-left:130px;">{{ post.user_name }}</div>
+              </div>
+              
             </div>
           </el-card>
         </transition-group>
@@ -151,7 +170,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
-
+import { Star } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png'
 import UserInfo from './components/userInfo.vue'
 
@@ -159,6 +178,8 @@ const router = useRouter()
 const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
 let posts = ref([])
+const loading = ref(true)
+const error = ref(null)
 const navMenus = [
   { index: '/home', label: '模型广场' },
   { index: '/aichat', label: 'ai助手' },
@@ -169,7 +190,7 @@ const categories = ['全部', '甲状腺分级', '乳腺癌分级', '肺结节�
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8888/posts', {
+    const response = await fetch('http://localhost:8888/getPosts', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -180,9 +201,9 @@ onMounted(async () => {
     if (!response.ok) {
       throw new Error('无法获取模型列表')
     }
-
     const data = await response.json()
     posts.value = data
+    console.log('获取到的模型列表：', posts.value)
   } catch (err) {
     console.error('获取模型失败：', err)
     error.value = err.message
@@ -192,8 +213,8 @@ onMounted(async () => {
 })
 
 const filteredPosts = computed(() => {
-  if (selectedCategory.value === '全部') return posts
-  return posts.filter((m) => m.category === selectedCategory.value)
+  if (selectedCategory.value === '全部') return posts.value
+  return posts.value.filter((m) => m.type_name === selectedCategory.value)
 })
 
 function handleMenuSelect(index) {
@@ -201,9 +222,42 @@ function handleMenuSelect(index) {
   router.push(index)
 }
 
+function handleLoginClick() {
+  
+}
+async function toggleLike(post) {
+  try{
+    console.log('Toggling like for post:', post.post_id)
+    const endpoint = `http://localhost:8888/updatePost`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        post_id: post.post_id,
+        likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+        isLiked: !post.isLiked
+      }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('更新点赞状态失败');
+    }
+  }catch (error) {
+    console.error('Error toggling like:', error)
+    alert('操作失败，请稍后再试')
+    return
+  }
+  post.isLiked = !post.isLiked
+  post.likes += post.isLiked ? 1 : -1
+  console.log('Post liked:', post)
+}
 async function goToPostDetail(post) {
   try {
-    const response = await fetch(`http://localhost:8888/getPost?id=${post.id}`, {
+    console.log('id:', post.post_id)
+    const response = await fetch(`http://localhost:8888/getPostByID?post_id=${parseInt(post.post_id)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -220,10 +274,15 @@ async function goToPostDetail(post) {
 
     // 假设你需要把 data 传给下一个页面，可以通过 query 或 store
     router.push({
-      path: `/model/${model.id}`,
+      path: `/model/${post.post_id}`,
       query: {
-        postid: data.postid,
-        type: data.type_name
+        postid: data.post_id,
+        type_name: data.type_name,
+        content: data.content,
+        title: data.title,
+        introduction: data.introduction,
+        user_name: data.user_name,
+        likes: data.likes,
       }
     })
     
@@ -348,7 +407,8 @@ function submitPost() {
 }
 .card-title {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
+  margin-bottom: 6px;
 }
 .card-desc {
   color: #888;
@@ -440,5 +500,28 @@ function submitPost() {
   align-items: center;
   justify-content: center;
   font-size: 24px;
+}
+
+.likes-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.likes-count {
+  font-size: 14px;
+  color: #666;
+}
+.icon-button {
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
+}
+
+/* 可选：悬停效果 */
+.icon-button:hover {
+  opacity: 0.8;
 }
 </style>
