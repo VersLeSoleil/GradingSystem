@@ -37,14 +37,14 @@
     </el-menu>
   </div>
       
-      <el-dropdown>
-      <el-button type="primary" @click="handleLoginClick">
-        未登录<el-icon class="el-icon--right"><arrow-down /></el-icon>
+      <el-dropdown @command="handleCommand">
+      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+        {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
       </el-button>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item>编辑资料</el-dropdown-item>
-          <el-dropdown-item>退出登录</el-dropdown-item>
+          <el-dropdown-item command="editProfile">编辑资料</el-dropdown-item>
+          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -89,11 +89,10 @@
               <div class="card-title">{{ post.title }}</div>
               <div class="card-desc">{{ post.introduction }}</div>
               <el-tag size="small" type="success">{{ post.type_name }}</el-tag>
+              <el-tag size="small" type="warning" style="margin-left:5px">{{ post.model_types }}</el-tag>
               <div class="card-foot" style="display: flex;flex-direction: row;">
-                <div class="likes-container" style="margin-top: 10px;">
-                  <button @click="toggleLike(post)"  class="icon-button">
-                    <el-icon><Star /></el-icon>
-                  </button>
+                <div class="likes-container" style="margin-top: 10px;">               
+                    <el-icon><Star /></el-icon>            
                   <span class="likes-count">{{ post.likes }}</span>
                 </div>
                 <div class="card-author" style="margin-left:130px;">{{ post.user_name }}</div>
@@ -132,7 +131,10 @@
       <el-form-item label="描述">
         <el-input v-model="postForm.introduction" placeholder="描述" />
       </el-form-item>
-      <el-form-item label="标签">
+      <el-form-item label="模型分类">
+        <el-input v-model="postForm.model_types" placeholder="模型分类" />
+      </el-form-item>
+      <el-form-item label="疾病分类">
       <el-select
         v-model="postForm.type_name"      
         placeholder="请选择标签"
@@ -169,7 +171,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
-import { Star } from '@element-plus/icons-vue';
+import { Star,ArrowDown } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png'
 import UserInfo from './components/userInfo.vue'
 import { useUserStore } from '@/store/user'
@@ -192,7 +194,22 @@ const navMenus = [
 
 const categories = ['全部', '甲状腺分级', '乳腺癌分级', '肺结节分级', '肝脏分级', '脑肿瘤分级']
 
-onMounted(async () => {
+const handleCommand = async (command) => {
+  switch(command) {
+    case 'editProfile':
+      showUserInfo()
+      break
+    case 'logout':
+      await handleLogout()
+      break
+  }
+}
+const handleEditProfile = () => {
+  const userInfoRef = ref(null)
+  userInfoRef.value.openDialog()
+}
+
+async function getAllposts() {
   try {
     const response = await fetch('http://localhost:8888/getPosts', {
       method: 'GET',
@@ -214,6 +231,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(async () => {
+  await getAllposts()
 })
 
 const filteredPosts = computed(() => {
@@ -226,9 +247,6 @@ function handleMenuSelect(index) {
   router.push(index)
 }
 
-function handleLoginClick() {
-  
-}
 async function toggleLike(post) {
   try{
     console.log('Toggling like for post:', post.post_id)
@@ -282,6 +300,7 @@ async function goToPostDetail(post) {
       query: {
         postid: data.post_id,
         type_name: data.type_name,
+        model_types: data.model_types,
         content: data.content,
         title: data.title,
         introduction: data.introduction,
@@ -361,6 +380,8 @@ async function submitPost() {
   const data = await response.json()
   ElMessage.success('发布成功！')
   console.log('发布成功:', data)
+  // 刷新帖子列表
+  await getAllposts()
 
   // 清空表单
   postForm.value = {
@@ -534,6 +555,16 @@ async function submitPost() {
   cursor: pointer;       /* 保持手型指针 */
   outline: none;         /* 移除聚焦时的轮廓线 */
 }
+.user-info-button{
+  color:#cf5454;
+  font-size:15px;
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
+}
+
 
 /* 可选：悬停效果 */
 .icon-button:hover {

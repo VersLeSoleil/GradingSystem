@@ -35,3 +35,4 @@ func ModifyUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	restful.RespondWithSuccess(w, "修改成功")
 }
+

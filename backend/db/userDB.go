@@ -89,3 +89,9 @@ func UpdateUserInfo(tempUser structTypes.UserInfo) error {
 	_, err := DB.Exec(query, tempUser.Sex, tempUser.Birthday, tempUser.Avatar, tempUser.Email, tempUser.Phone, tempUser.Resume, tempUser.UserName)
 	return err
 }
+
+func UpdateResume(username, newResume string) error {
+	query := `UPDATE user_table SET resume = ? WHERE user_name = ?`
+	_, err := DB.Exec(query, newResume, username)
+	return err
+}

@@ -2,13 +2,26 @@
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/store/user'
 import { ElDialog, ElCard, ElAvatar, ElSkeleton, ElSkeletonItem, ElDivider, ElInput, ElButton, ElMessage } from 'element-plus'
+import useravatar from '@/assets/user-avatar.png'
 const dialogVisible = ref(false)
 const userStore = useUserStore()
-const user = computed(() => userStore.userInfo || {})
+const user = computed(() => {
+  const info = userStore.userInfo || {}
+  return {
+    ...info,
+    // 处理可能存在的 { String, Valid } 结构
+    Resume: info.Resume?.Valid ? info.Resume.String : info.Resume || '',
+    Phone: info.Phone?.Valid ? info.Phone.String : info.Phone || '',
+    Email: info.Email?.Valid ? info.Email.String : info.Email || ''
+  }
+})
+console.log('user:', user.value)
 const loading = ref(true) 
 const editing = ref(false)
 const editIntro = ref('')
-
+const editNumber = ref('')
+const birthday = ref(user.value.Birthday || '')
+const localSex = ref(user.value.Sex === 'F' ? '2' : '1')
 async function openDialog() {
   loading.value = true
   dialogVisible.value = true
@@ -16,6 +29,7 @@ async function openDialog() {
   await new Promise(resolve => setTimeout(resolve, 500))
 
   editIntro.value = user.value.Resume || ''
+  editNumber.value = user.value.Phone || ''
   loading.value = false
 }
 
@@ -28,144 +42,236 @@ function startEdit() {
   editing.value = true
 }
 
-function saveIntro() {
+async function saveIntro() {
+  if (!editIntro.value.trim()) {
+    ElMessage.error('简介不能为空')
+    return
+  }
+
   userStore.userInfo.Resume = editIntro.value
+  userStore.userInfo.Phone = editNumber.value
+  userStore.userInfo.Sex = localSex.value === '1' ? 'M' : 'F'
+  userStore.userInfo.Birthday = birthday.value
+  
   editing.value = false
-  ElMessage.success('简介已保存（仅本地模拟）')
+  let endpoint = 'http://localhost:8888/UpdateUserInfo';
+  let method = 'POST';
+  let requestBody = {
+    user_name: user.value.UserName,
+    resume: editIntro.value,
+    phone: editNumber.value,
+    sex: userStore.userInfo.Sex,
+    birthday: birthday.value,
+    password: user.value.Password,
+    avatar: user.value.Avatar,
+    role: user.value.Role,
+    email: user.value.Email
+  };
+  const response = await fetch(endpoint, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+    credentials: 'include', 
+  });
+  if (response.ok) {
+    ElMessage.success('个人简介已更新')
+  } else {
+    ElMessage.error('更新失败，请稍后再试')
+  }
 }
 
 defineExpose({ openDialog})
 
 </script>
-
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="个人信息"
-    width="540px"
+    width="460px"
     :before-close="closeDialog"
     :close-on-click-modal="false"
+    class="pretty-profile-dialog"
+    :show-close="false"
   >
-    <el-card shadow="hover" class="profile-card">
-      <el-skeleton :loading="loading" animated>
-        <template #template>
-          <el-skeleton-item variant="circle" class="profile-avatar-skeleton" />
-          <el-skeleton-item variant="text" class="skeleton-line short" />
-          <el-skeleton-item variant="text" class="skeleton-line medium" />
-          <el-divider />
-          <el-skeleton-item variant="text" class="skeleton-line full" v-for="i in 5" :key="i" />
-        </template>
+    <div class="profile-container">
+      <div class="dialog-title-bar">完善您的个人简介</div>
 
-        <template #default>
-          <el-avatar :src="user.Avatar || ''" size="120px" class="profile-avatar" />
-          <div class="profile-name">{{ user.UserName || '未命名用户' }}</div>
-          <div class="profile-email">{{ user.Email || '暂无邮箱' }}</div>
-
-          <el-divider />
-
-          <div class="profile-info">
-            <div class="profile-field"><strong>性别：</strong>{{ user.Sex || '未知' }}</div>
-            <div class="profile-field"><strong>生日：</strong>{{ user.Birthday ? new Date(user.Birthday).toLocaleDateString() : '无' }}</div>
-            <div class="profile-field"><strong>角色：</strong>{{ user.Role || '未知' }}</div>
-            <div class="profile-field"><strong>手机号：</strong>{{ user.Phone || '无' }}</div>
-            <div class="profile-field"><strong>注册时间：</strong>{{ user.CreatedDate ? new Date(user.CreatedDate).toLocaleString() : '未知' }}</div>
+      <div class="profile-content">
+        <div class="profile-header">
+          <el-avatar :src="useravatar || ''" size="80px" />
+          <div class="profile-meta">
+            <div class="name">{{ user.UserName || '未命名用户' }}</div>
+            <div class="email">{{ user.Email || '暂无邮箱' }}</div>
           </div>
+        </div>
 
-          <el-divider />
+        <el-divider />
 
-          <div class="profile-intro-label">个人简介</div>
-          <div v-if="!editing" class="profile-intro">{{ user.Resume || '暂无简介' }}</div>
-          <el-input v-else v-model="editIntro" type="textarea" rows="3" placeholder="请输入个人简介" />
+        <div class="profile-info">
+          <div class="intro-section">
+          <div class="intro-label" v-if="!editing">生日</div>
+          <el-date-picker
+              :readonly="!editing"
+              v-model="birthday"
+              type="date"
+              placeholder="选择您的生日"
+              :size="size"
+            />
+        </div>
+        <div class="intro-section">
+          <div class="intro-label">性别</div>
+          <el-radio-group v-model="localSex" :disabled="!editing" size="large">
+            <el-radio value="1" size="large">男</el-radio>
+            <el-radio value="2" size="large">女</el-radio>
+          </el-radio-group>
+        </div>
+          <div class="intro-section">
+          <div class="intro-label">手机号</div>
+          <div v-if="!editing" class="number-content">{{ user.Phone || '无' }}</div>
+          <el-input v-else v-model="editNumber" type="textarea" rows="2" placeholder="电话号码" />
+        </div>
+          
+        </div>
 
-          <div class="profile-btns">
-            <el-button v-if="!editing" type="primary" @click="startEdit" size="small" icon="Edit">编辑简介</el-button>
-            <el-button v-else type="success" @click="saveIntro" size="small" icon="Check">保存</el-button>
-            <el-button v-else @click="editing = false" size="small" icon="Close">取消</el-button>
-            <el-button type="danger" size="small" @click="closeDialog" icon="CloseBold">关闭</el-button>
-          </div>
-        </template>
-      </el-skeleton>
-    </el-card>
+        <el-divider />
+
+        <div class="intro-section">
+          <div class="intro-label">个人简介</div>
+          <div v-if="!editing" class="intro-content">{{ user.Resume || '暂无简介' }}</div>
+          <el-input v-else v-model="editIntro" type="textarea" rows="4" placeholder="介绍一下自己..." />
+        </div>
+
+        <div class="btn-area">
+          <el-button v-if="!editing" type="primary" @click="startEdit" class="edit">编辑简介</el-button>
+          <el-button v-else type="success" @click="saveIntro" class="edit">保存</el-button>   
+          <el-button v-if="!editing" @click="closeDialog" type="danger" class="cancel">关闭</el-button>
+          <el-button v-else @click="editing = false" class="cancel">取消</el-button>
+        </div>
+      </div>
+    </div>
   </el-dialog>
 </template>
 
-
 <style scoped>
-.profile-card {
+/* 去除对话框本体的 padding 和圆角问题 */
+::v-deep(.el-dialog) {
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+.edit {
+  color: #fff;
+  background-color: rgb(196, 87, 87);
+  border-color: rgb(196, 87, 87);
+  width: 80px;
+}
+.edit:hover,
+.edit:focus {
+  background: var(--el-button-hover-color);
+  border-color: var(--el-button-hover-color);
+  color: var(--el-button-font-color);
+}
+.cancel {
+  color: #fff;
+  background-color: rgb(105, 105, 105);
+  border-color: rgb(105, 105, 105);
+  width: 80px;
+}
+.cancel:hover,
+.cancel:focus {
+  background: var(--el-button-hover-color);
+  border-color: var(--el-button-hover-color);
+  color: var(--el-button-font-color);
+}
+/* 去除内部 padding */
+::v-deep(.el-dialog__body) {
+  padding: 0 !important;
+}
+
+/* 主体容器填满内容 */
+.profile-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 28px 24px;
-  border-radius: 10px;
-  background: #fdfdfd;
-  transition: box-shadow 0.3s ease;
-}
-.profile-avatar {
-  margin-bottom: 12px;
-  border: 3px solid #e1e4e8;
-}
-.profile-name {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2d3d;
-  margin-top: 4px;
-}
-.profile-email {
-  font-size: 14px;
-  color: #909399;
-  margin-bottom: 12px;
-}
-.profile-info {
-  width: 100%;
-  margin-bottom: 12px;
-}
-.profile-field {
-  width: 100%;
-  margin: 6px 0;
-  font-size: 14px;
-  color: #606266;
-}
-.profile-intro-label {
-  font-weight: bold;
-  font-size: 15px;
-  margin-bottom: 6px;
-  width: 100%;
-}
-.profile-intro {
-  min-height: 40px;
-  width: 100%;
-  margin-bottom: 12px;
-  color: #303133;
-  line-height: 1.4;
-}
-.profile-btns {
-  width: 100%;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-.profile-avatar-skeleton {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  margin-bottom: 12px;
-}
-.skeleton-line {
-  border-radius: 4px;
-  margin: 6px 0;
-}
-.skeleton-line.short {
-  width: 60%;
-  height: 20px;
-}
-.skeleton-line.medium {
-  width: 50%;
-  height: 16px;
-}
-.skeleton-line.full {
-  width: 100%;
-  height: 14px;
+  height: 100%;
+  background-color: white;
 }
 
+/* 顶部标题条 */
+.dialog-title-bar {
+  background-color: #ad3c3c;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  padding: 16px;
+}
+
+/* 主体内容区域 */
+.profile-content {
+  padding: 20px;
+}
+
+/* 信息头部 */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-meta .name {
+  font-size: 26px;
+  font-weight: bold;
+  color: #333;
+}
+
+.profile-meta .email {
+  font-size: 13px;
+  color: #888;
+}
+
+/* 基本信息区域 */
+.profile-info {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* 简介区域 */
+.intro-section {
+  margin-top: 12px;
+}
+
+.intro-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.intro-content {
+  background-color: #f8f8f8;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
+
+.number-content {
+  background-color: #f8f8f8;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 30px;
+  white-space: pre-wrap;
+}
+
+/* 按钮区域 */
+.btn-area {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
 </style>
