@@ -59,7 +59,7 @@ func DeletePostByID(postID int) error {
 }
 
 func GetPostByID(postID int) (*structTypes.Post, error) {
-	query := `SELECT post_id, type_name, user_name, title, introduction, content, model_types=?, created_date, updated_date, is_public, likes 
+	query := `SELECT post_id, type_name, user_name, title, introduction, content, model_types, created_date, updated_date, is_public, likes 
 			  FROM post_table WHERE post_id = ?`
 	row := DB.QueryRow(query, postID)
 

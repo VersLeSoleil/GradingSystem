@@ -57,15 +57,17 @@ async function saveIntro() {
   let endpoint = 'http://localhost:8888/UpdateUserInfo';
   let method = 'POST';
   let requestBody = {
-    user_name: user.value.UserName,
-    resume: editIntro.value,
-    phone: editNumber.value,
-    sex: userStore.userInfo.Sex,
-    birthday: birthday.value,
-    password: user.value.Password,
-    avatar: user.value.Avatar,
-    role: user.value.Role,
-    email: user.value.Email
+    user_name: user.value.UserName || '',
+    resume: editIntro.value || '',
+    phone: editNumber.value || '',
+    sex: userStore.userInfo.Sex || '',
+    birthday: birthday.value ? (typeof birthday.value === 'string' ? birthday.value : birthday.value.toISOString().slice(0, 10)) : '',
+    password: user.value.Password || '',
+    avatar: (user.value.Avatar && typeof user.value.Avatar === 'object')
+    ? (user.value.Avatar.String || '')
+    : (user.value.Avatar || ''),
+    role: user.value.Role || '',
+    email: user.value.Email || ''
   };
   const response = await fetch(endpoint, {
     method: method,

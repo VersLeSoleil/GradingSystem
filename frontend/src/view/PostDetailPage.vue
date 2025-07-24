@@ -1,12 +1,19 @@
+
 <script setup>
 import { ref, computed,onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTree, ElButton } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import logoImg from '@/assets/logo.png'
 import bgImage from '@/assets/background.png';
 import MarkdownIt from 'markdown-it'
 import 'github-markdown-css/github-markdown-light.css'
 import { Star } from '@element-plus/icons-vue';
+import UserInfo from '@/view/components/userInfo.vue'
+import { useUserStore } from '@/store/user'
+const userStore = useUserStore()
+const username = userStore.userInfo.UserName
+const userInfoRef = ref(null)
 const router = useRouter()
 const route = useRoute()
 const md = new MarkdownIt()
@@ -26,6 +33,71 @@ const title = route.query.title
 const introduction = route.query.introduction
 const userName = route.query.user_name
 const likes = route.query.likes
+
+// 点赞状态和数量
+const liked = ref(false)
+const likeCount = ref(Number(route.query.likes) || 0)
+
+const handleCommand = async (command) => {
+  switch(command) {
+    case 'editProfile':
+      showUserInfo()
+      break
+    case 'logout':
+      await handleLogout()
+      break
+  }
+}
+
+function showUserInfo() {
+  console.log('userInfoRef:', userInfoRef.value)
+  userInfoRef.value.openDialog()
+}
+
+const handleLogout = () => {
+  // 清除本地存储的 token 和用户信息
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user')
+  // 如果有 Pinia/Vuex 用户信息，也要清空
+  userStore.$reset && userStore.$reset()
+  // 跳转到登录页
+  router.push('/login')
+}
+
+// 点赞接口
+async function toggleLike() {
+  // 防止重复点击
+  if (liked.value) {
+    likeCount.value--
+  } else {
+    likeCount.value++
+  }
+  liked.value = !liked.value
+  // 可选：后端同步
+  try {
+    const response = await fetch('http://localhost:8888/updatePost', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        post_id: postId,
+        likes: likeCount.value,
+        isLiked: liked.value
+      }),
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      throw new Error('点赞失败')
+    }
+  } catch (err) {
+    // 回滚本地状态
+    liked.value = !liked.value
+    likeCount.value += liked.value ? 1 : -1
+    alert('点赞失败，请稍后再试')
+  }
+}
 
 onMounted(() => {
   console.log('content:', route.query.content)
@@ -59,8 +131,7 @@ function addComment() {
   }
 }
 
-const activeIndex = ref('readme')
-const readmeContent = ref(`# GoogleNet\n\n本模型基于GoogleNet架构，适用于甲状腺分级任务。\n\n- 高准确率\n- 支持多种医学影像格式\n- 详细文档与示例\n\n## 快速开始\n\n1. 安装依赖\n2. 运行main.py\n3. 查看结果\n`)
+
 function handleSelect(key) {
   activeIndex.value = key
 }
@@ -105,7 +176,18 @@ function handleSelect(key) {
     </el-menu>
   </div>
       
-      <el-avatar size="36" src="https://element-plus.org/images/element-plus-logo.svg" @click="goToProfile" style="cursor: pointer" />
+      <el-dropdown @command="handleCommand">
+      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+        {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="editProfile">编辑资料</el-dropdown-item>
+          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+
     </el-header>
     <el-main :style="{
           padding: '32px 0 0 0',
@@ -134,10 +216,10 @@ function handleSelect(key) {
                 <!-- 底部信息行 -->
                 <div class="header-bottom-row">
                   <div class="likes-container">
-                    <button @click="toggleLike(post)"  class="icon-button">
-                      <el-icon><Star /></el-icon>
+                    <button @click="toggleLike"  class="icon-button">
+                      <el-icon :style="liked ? { color: '#f56c6c' } : {}"><Star /></el-icon>
                     </button>
-                    <span class="likes-count">{{ route.query.likes || 0 }}</span>
+                    <span class="likes-count">{{ likeCount }}</span>
                   </div>
                   <div class="card-author">{{ route.query.user_name }}</div>
                 </div>
@@ -160,6 +242,7 @@ function handleSelect(key) {
       </el-card>
     </el-main>
   </el-container>
+  <UserInfo ref="userInfoRef" />
 </template>
 
 <style scoped>
@@ -314,5 +397,15 @@ function handleSelect(key) {
     align-items: flex-start;
     gap: 8px;
   }
+}
+
+.user-info-button{
+  color:#cf5454;
+  font-size:15px;
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
 }
 </style>

@@ -6,6 +6,7 @@ import (
 	"backend/structTypes"
 	"encoding/json"
 	"net/http"
+	"log"
 )
 
 func ModifyUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +25,7 @@ func ModifyUserInfo(w http.ResponseWriter, r *http.Request) {
 	var user structTypes.UserInfo
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		log.Println("JSON解析失败:", err)
 		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
 		return
 	}

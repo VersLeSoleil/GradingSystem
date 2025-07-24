@@ -56,7 +56,7 @@
         <div class="search-content">
           <h2 class="title">模型广场 - 为您推荐智能分级解决方案</h2>
           <p class="subtitle">发现和分享优质大模型，让诊断更高效</p>
-          <el-input placeholder="搜索公共模型..." prefix-icon="el-icon-search" clearable class="search-input" />
+          <el-input v-model="searchText" placeholder="搜索公共模型..." prefix-icon="el-icon-search" clearable class="search-input" />
         </div>
       </transition>
     </div>
@@ -204,9 +204,15 @@ const handleCommand = async (command) => {
       break
   }
 }
-const handleEditProfile = () => {
-  const userInfoRef = ref(null)
-  userInfoRef.value.openDialog()
+const handleLogout = () => {
+  // 清除本地存储的 token 和用户信息
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user')
+  // 如果有 Pinia/Vuex 用户信息，也要清空
+  userStore.$reset && userStore.$reset()
+  // 跳转到登录页
+  router.push('/login')
 }
 
 async function getAllposts() {
@@ -237,10 +243,6 @@ onMounted(async () => {
   await getAllposts()
 })
 
-const filteredPosts = computed(() => {
-  if (selectedCategory.value === '全部') return posts.value
-  return posts.value.filter((m) => m.type_name === selectedCategory.value)
-})
 
 function handleMenuSelect(index) {
   activeMenu.value = index
@@ -392,7 +394,24 @@ async function submitPost() {
   }
   dialogVisible.value = false
 }
+const searchText = ref('')
 
+const filteredPosts = computed(() => {
+  let result = posts.value
+  if (selectedCategory.value !== '全部') {
+    result = result.filter(m => m.type_name === selectedCategory.value)
+  }
+  if (searchText.value.trim()) {
+    const keyword = searchText.value.trim().toLowerCase()
+    result = result.filter(
+      m =>
+        m.title.toLowerCase().includes(keyword) ||
+        m.introduction.toLowerCase().includes(keyword) ||
+        (m.model_types && m.model_types.toLowerCase().includes(keyword))
+    )
+  }
+  return result
+})
 </script>
 
 <style scoped>

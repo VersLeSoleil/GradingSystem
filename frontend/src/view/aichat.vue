@@ -4,10 +4,15 @@ import { useRouter } from 'vue-router';
 import { ElAvatar, ElMenu, ElMenuItem, ElInput, ElButton, ElIcon } from 'element-plus';
 import { Position } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png';
+import { ArrowDown } from '@element-plus/icons-vue';
 import { callDeepSeekAPI } from '@/view/tools/aiChatGen';
 import MarkdownIt from 'markdown-it';
+import { useUserStore } from '@/store/user'
+import UserInfo from './components/userInfo.vue'
+const userStore = useUserStore()
 const router = useRouter();
 const md = new MarkdownIt();
+const username = userStore.userInfo.UserName
 // 状态管理
 const activeMenu = ref('/aichat');
 const userInput = ref('');
@@ -21,6 +26,31 @@ const presetQuestions = [
   '哪些模型适合肺部B超图像分级？'
 ];
 
+const handleCommand = async (command) => {
+  switch(command) {
+    case 'editProfile':
+      showUserInfo()
+      break
+    case 'logout':
+      await handleLogout()
+      break
+  }
+}
+const handleLogout = () => {
+  // 清除本地存储的 token 和用户信息
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user')
+  // 如果有 Pinia/Vuex 用户信息，也要清空
+  userStore.$reset && userStore.$reset()
+  // 跳转到登录页
+  router.push('/login')
+}
+const userInfoRef = ref(null)
+function showUserInfo() {
+  console.log('userInfoRef:', userInfoRef.value)
+  userInfoRef.value.openDialog()
+}
 // 初始化欢迎消息
 onMounted(() => {
   chatHistory.value.push({
@@ -101,11 +131,17 @@ const navMenus = [
           </el-menu-item>
         </el-menu>
       </div>
-      <el-avatar 
-        size="36" 
-        src="https://element-plus.org/images/element-plus-logo.svg" 
-        class="user-avatar"
-      />
+      <el-dropdown @command="handleCommand">
+      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+        {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="editProfile">编辑资料</el-dropdown-item>
+          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     </el-header>
 
     <!-- 主体区域 -->
@@ -165,6 +201,7 @@ const navMenus = [
       </div>
     </el-main>
   </el-container>
+  <UserInfo ref="userInfoRef" />
 </template>
 
 <style scoped>
@@ -176,6 +213,15 @@ const navMenus = [
   --el-color-primary-light-8: #fcefef; /* 超浅变体 */
   --el-color-primary-light-9: #fef7f7; /* 极浅变体 */
   --el-color-primary-dark-2: #a83f3f; /* 深色变体 */
+}
+.user-info-button{
+  color:#cf5454;
+  font-size:15px;
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
 }
 
 /* 按钮悬停和激活状态 */

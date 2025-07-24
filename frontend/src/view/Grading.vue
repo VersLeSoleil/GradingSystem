@@ -4,9 +4,13 @@ import { useRouter } from 'vue-router'
 import { Delete,ZoomIn} from '@element-plus/icons-vue'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElUpload, ElSelect, ElOption, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import logoImg from '@/assets/logo.png'
+import { ArrowDown } from '@element-plus/icons-vue';
 import axios from 'axios'
+import { useUserStore } from '@/store/user'
+import UserInfo from './components/userInfo.vue'
+const userStore = useUserStore()
 const router = useRouter()
-
+const username = userStore.userInfo.UserName
 // 顶部导航菜单
 const navMenus = [
   { index: '/home', label: '模型广场' },
@@ -18,8 +22,11 @@ function handleMenuSelect(index) {
   activeMenu.value = index
   router.push(index)
 }
-function goToProfile() {
-  router.push('/profile')
+
+const userInfoRef = ref(null)
+function showUserInfo() {
+  console.log('userInfoRef:', userInfoRef.value)
+  userInfoRef.value.openDialog()
 }
 // 可选模型列表
 const models = [
@@ -60,15 +67,38 @@ const handleUploadSuccess = async () => {
   }
 }
 
-
+const handleCommand = async (command) => {
+  switch(command) {
+    case 'editProfile':
+      showUserInfo()
+      break
+    case 'logout':
+      await handleLogout()
+      break
+  }
+}
+const handleLogout = () => {
+  // 清除本地存储的 token 和用户信息
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user')
+  // 如果有 Pinia/Vuex 用户信息，也要清空
+  userStore.$reset && userStore.$reset()
+  // 跳转到登录页
+  router.push('/login')
+}
 const handleRemove = (file, uploadFiles) => {
-  console.log(file, uploadFiles);
-  // 你可以在这里添加自定义删除逻辑
-  // 例如：
-  // const index = uploadFiles.findIndex(f => f.uid === file.uid);
-  // if (index !== -1) {
-  //   uploadFiles.splice(index, 1);
-  // }
+  // 只处理 el-upload 的 on-remove 事件
+  if (uploadFiles) {
+    fileList.value = uploadFiles.slice()
+  }
+}
+
+const uploadRef = ref(null)
+function triggerUploadRemove(file) {
+  if (uploadRef.value && uploadRef.value.handleRemove) {
+    uploadRef.value.handleRemove(file)
+  }
 }
 
 // 模型简介
@@ -127,7 +157,17 @@ const resultTable = ref([
     </el-menu>
   </div>
       
-      <el-avatar size="36" src="https://element-plus.org/images/element-plus-logo.svg" @click="goToProfile" style="cursor: pointer" />
+      <el-dropdown @command="handleCommand">
+      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+        {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
+      </el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="editProfile">编辑资料</el-dropdown-item>
+          <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     </el-header>
 
     <el-main style="background: #fff; padding: 24px 0; height: calc(100vh - 64px);">
@@ -167,6 +207,7 @@ const resultTable = ref([
             <div style="max-height: 500px; overflow-y: auto; padding-right: 4px;">
             
               <el-upload
+              ref="uploadRef"
               v-model:file-list="fileList"
               action="#"
               :auto-upload="false"
@@ -179,7 +220,7 @@ const resultTable = ref([
             >           
               <span style="font-size:60px;font-weight: lighter; color:gray">+</span>             
               <template #file="{ file }">
-                <div class="uploaded-file">
+                <div class="uploaded-file" style="position:relative;">
                   <img
                     v-if="file.raw.type.includes('image')"
                     :src="file.url ? file.url : URL.createObjectURL(file.raw)"
@@ -189,9 +230,14 @@ const resultTable = ref([
                   <el-icon v-else class="uploaded-file-icon"><Document /></el-icon>
                   <span class="uploaded-file-name">{{ file.name }}</span>
                   <span class="uploaded-file-actions">
-                    <el-icon @click="handlePreview(file)"><ZoomIn /></el-icon>
-                    <el-icon @click="handleRemove(file)"><Delete /></el-icon>
+                    <el-icon @click.stop="handlePreview(file)"><ZoomIn /></el-icon>
                   </span>
+                  <!-- 右上角删除按钮 -->
+                  <el-icon
+                    style="position:absolute;top:4px;right:4px;cursor:pointer;color:#f56c6c;z-index:2;"
+                    @click.stop="triggerUploadRemove(file)"
+                    title="删除"
+                  ><Delete /></el-icon>
                 </div>
               </template>
             </el-upload>
@@ -201,9 +247,19 @@ const resultTable = ref([
       </div>
     </el-main>
   </el-container>
+  <UserInfo ref="userInfoRef" />
 </template>
 
 <style scoped>
+.user-info-button{
+  color:#cf5454;
+  font-size:15px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
 .search-section {
   background: #f9f9f9;
   padding: 40px 0;
@@ -394,4 +450,14 @@ const resultTable = ref([
   object-position: center; /* 居中显示 */
   background-color: #f5f5f5; /* 添加背景色填充空白区域 */
 }
+.user-info-button{
+  color:#cf5454;
+  font-size:15px;
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
+}
+
 </style>
