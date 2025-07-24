@@ -176,7 +176,8 @@ import { useUserStore } from '@/store/user'
 
 // 在组件中
 const userStore = useUserStore()
-const username = userStore.userInfo?.username
+const username = userStore.userInfo.UserName
+console.log('当前用户名:', username)
 const router = useRouter()
 const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
@@ -304,11 +305,11 @@ function showUserInfo() {
 // 发帖弹窗逻辑
 const dialogVisible = ref(false)
 const tagOptions = [
-  { label: '甲状腺分级', value: 'thyroid_classification' },
-  { label: '乳腺癌分级', value: 'breast_cancer_classification' },
-  { label: '肺结节分级', value: 'lung_nodule' },
-  { label: '肝脏分级', value: 'liver_tumor' },
-  { label: '脑肿瘤分级', value: 'brain_tumor' }
+  { label: '甲状腺分级', value: '甲状腺分级' },
+  { label: '乳腺癌分级', value: '乳腺癌分级' },
+  { label: '肺结节分级', value: '肺结节分级' },
+  { label: '肝脏分级', value: '肝脏分级' },
+  { label: '脑肿瘤分级', value: '脑肿瘤分级' }
 ]
 const postForm = ref({
   title: '',

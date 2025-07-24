@@ -75,7 +75,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
 		return
 	}
-
+	fmt.Println("创建帖子:", post)
 	if err := db.CreatedPost(post); err != nil {
 		log.Printf("创建帖子失败: %v", err)
 		restful.RespondWithError(w, http.StatusInternalServerError, "创建帖子失败")
