@@ -317,6 +317,7 @@ const postForm = ref({
   content: '',
   user_name: username || '未登录用户', // 确保后端能接受这个默认值
   type_name: '默认分类', // 提供默认分类
+  model_types: '', 
   is_public: true // 明确设置
 })
 function handleClose() {
@@ -335,6 +336,7 @@ async function submitPost() {
   title: postForm.value.title,
   introduction: postForm.value.introduction,
   content: postForm.value.content,
+  model_types: postForm.value.model_types, // 确保这个字段有值
   created_date: new Date().toISOString(), // 改为created_date
   updated_date: new Date().toISOString(), // 添加updated_date
   is_public:  true // 确保有默认值
