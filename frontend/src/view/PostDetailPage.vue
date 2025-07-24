@@ -134,7 +134,9 @@ function handleSelect(key) {
                 <!-- 底部信息行 -->
                 <div class="header-bottom-row">
                   <div class="likes-container">
-                    <el-icon class="like-icon"><Star /></el-icon>
+                    <button @click="toggleLike(post)"  class="icon-button">
+                      <el-icon><Star /></el-icon>
+                    </button>
                     <span class="likes-count">{{ route.query.likes || 0 }}</span>
                   </div>
                   <div class="card-author">{{ route.query.user_name }}</div>
@@ -281,7 +283,15 @@ function handleSelect(key) {
 .like-icon {
   font-size: 16px;
 }
-
+.icon-button {
+  color: #f56c6c; /* 设置图标颜色 */
+  font-size: 16px; /* 设置图标大小 */
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
+}
 .likes-count {
   font-size: 14px;
 }

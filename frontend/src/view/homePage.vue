@@ -130,13 +130,12 @@
         <el-input v-model="postForm.title" placeholder="标题" />
       </el-form-item>
       <el-form-item label="描述">
-        <el-input v-model="postForm.describe" placeholder="描述" />
+        <el-input v-model="postForm.introduction" placeholder="描述" />
       </el-form-item>
       <el-form-item label="标签">
       <el-select
-        v-model="postForm.tags"
-        multiple
-        placeholder="请选择标签,可多选"
+        v-model="postForm.type_name"      
+        placeholder="请选择标签"
         style="width: 100%"
       >
         <el-option
@@ -169,11 +168,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
+import { ElMessage, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
 import { Star } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png'
 import UserInfo from './components/userInfo.vue'
+import { useUserStore } from '@/store/user'
 
+// 在组件中
+const userStore = useUserStore()
+const username = userStore.userInfo?.username
 const router = useRouter()
 const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
@@ -301,60 +304,69 @@ function showUserInfo() {
 // 发帖弹窗逻辑
 const dialogVisible = ref(false)
 const tagOptions = [
-  { label: '深度学习', value: 'deep_learning' },
-  { label: '机器学习', value: 'machine_learning' },
-  { label: '乳腺癌', value: 'breast_cancer' },
-  { label: '肺结节', value: 'lung_nodule' },
-  { label: '肝脏', value: 'liver_tumor' },
-  { label: '脑肿瘤', value: 'brain_tumor' }
+  { label: '甲状腺分级', value: 'thyroid_classification' },
+  { label: '乳腺癌分级', value: 'breast_cancer_classification' },
+  { label: '肺结节分级', value: 'lung_nodule' },
+  { label: '肝脏分级', value: 'liver_tumor' },
+  { label: '脑肿瘤分级', value: 'brain_tumor' }
 ]
 const postForm = ref({
   title: '',
-  describe: '',
-  tags: [],
-  content: ''
+  introduction: '',
+  content: '',
+  user_name: username || '未登录用户', // 确保后端能接受这个默认值
+  type_name: '默认分类', // 提供默认分类
+  is_public: true // 明确设置
 })
 function handleClose() {
   dialogVisible.value = false
 }
 
-function submitPost() {
+async function submitPost() {
   console.log('用户发帖内容：', postForm.value)
   if (!postForm.value.title || !postForm.value.content) {
     ElMessage.error('请填写标题和内容')
     return
   }
   const postData = {
-    title: postForm.value.title,
-    description: postForm.value.describe,
-    tags: postForm.value.tags,
-    content: postForm.value.content,
-    // 可以添加其他需要的字段，如用户ID、时间戳等
-    createdAt: new Date().toISOString()
-  }
-  axios.post('https://your-api-endpoint.com/posts', postData, {
-    headers: {
-      'Content-Type': 'application/json',
-      // 如果需要认证，可以添加token
-      // 'Authorization': `Bearer ${yourToken}`
-    }
-  })
-  .then(response => {
-    ElMessage.success('发布成功！')
-    console.log('发布成功:', response.data)
-    // 清空表单
-    postForm.value = { 
-      title: '', 
-      describe: '', 
-      tags: [], 
-      content: '' 
-    }
-    dialogVisible.value = false
-  })
-  .catch(error => {
+  type_name: postForm.value.type_name,
+  user_name: postForm.value.user_name, // 确保这个字段有值
+  title: postForm.value.title,
+  introduction: postForm.value.introduction,
+  content: postForm.value.content,
+  created_date: new Date().toISOString(), // 改为created_date
+  updated_date: new Date().toISOString(), // 添加updated_date
+  is_public:  true // 确保有默认值
+}
+  let endpoint = 'http://localhost:8888/createPost';
+  let method = 'POST';
+  const response = await fetch(endpoint, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData),
+      credentials: 'include', 
+    });
+
+  if (!response.ok) {
     ElMessage.error('发布失败，请重试')
-    console.error('发布失败:', error)
-  })
+    console.error('发布失败:', response.statusText)
+    return
+  }
+
+  const data = await response.json()
+  ElMessage.success('发布成功！')
+  console.log('发布成功:', data)
+
+  // 清空表单
+  postForm.value = {
+    title: '',
+    introduction: '',
+    type_name: '',
+    content: ''
+  }
+  dialogVisible.value = false
 }
 
 </script>
