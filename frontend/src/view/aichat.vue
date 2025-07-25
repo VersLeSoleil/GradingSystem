@@ -9,6 +9,8 @@ import { callDeepSeekAPI } from '@/view/tools/aiChatGen';
 import MarkdownIt from 'markdown-it';
 import { useUserStore } from '@/store/user'
 import UserInfo from './components/userInfo.vue'
+
+
 const userStore = useUserStore()
 const router = useRouter();
 const md = new MarkdownIt();
@@ -78,8 +80,12 @@ const callDeepSeek = async (prompt) => {
   chatHistory.value.push(loadingMsg);
 
   try {
+    // 将 myRAG.json 的内容作为系统提示的一部分
+    
+    const text = `用户输入: ${prompt}`;
+
     const { success, content } = await callDeepSeekAPI(
-      prompt,
+      text,
       chatHistory.value.filter(msg => !msg.loading)
     );
 
