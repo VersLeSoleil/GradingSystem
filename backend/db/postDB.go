@@ -156,3 +156,13 @@ func CancelLike(like structTypes.Like) error {
 	}
 	return nil
 }
+
+func IsLiked(postID int, username string) (bool, error) {
+	query := `SELECT COUNT(*) FROM post_like_table WHERE post_id = ? AND user_name = ?`
+	var count int
+	err := DB.QueryRow(query, postID, username).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("查询点赞状态失败: %w", err)
+	}
+	return count > 0, nil
+}
