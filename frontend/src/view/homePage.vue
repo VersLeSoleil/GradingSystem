@@ -67,7 +67,7 @@
         <!-- 左侧筛选栏 -->
         <div class="sidebar">
           <div class="sidebar-title">筛选条件</div>
-          <el-menu :default-active="selectedCategory" @select="selectedCategory = $event" class="el-menu-vertical-demo">
+          <el-menu :default-active="selectedCategory.value" @select="handleCategorySelect" class="el-menu-vertical-demo">
             <el-menu-item v-for="cat in categories" :key="cat" :index="cat">
               <el-icon><i class="el-icon-folder" /></el-icon>
               {{ cat }}
@@ -76,7 +76,7 @@
         </div>
 
         <!-- 卡片区域骨架屏 -->
-        <el-skeleton :rows="5" animated v-if="changing" style="margin-bottom: 24px;" />
+        <el-skeleton :rows="7" animated v-if="changing" style="margin-bottom: 24px;" />
         <!-- 卡片区域 -->
         <transition-group name="list-fade" tag="div" class="card-grid" v-else>
           <el-card
@@ -170,6 +170,9 @@
 </template>
 
 <script setup>
+function handleCategorySelect(cat) {
+  selectedCategory.value = cat;
+}
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
@@ -188,7 +191,7 @@ const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
 let posts = ref([])
 const loading = ref(true)
-const changing = ref(false)
+let changing = ref(false)
 const error = ref(null)
 const navMenus = [
   { index: '/home', label: '模型广场' },
@@ -270,6 +273,8 @@ async function goToPostDetail(post) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
+        
       },
       credentials: 'include' // 如果你需要发送 cookie
     })
@@ -378,11 +383,18 @@ async function submitPost() {
 }
 const searchText = ref('')
 
+watch(selectedCategory, () => {
+  changing.value = true;
+  setTimeout(() => {
+    changing.value = false;
+  }, 150);
+});
+
 watch(searchText, () => {
   changing.value = true;
   setTimeout(() => {
     changing.value = false;
-  }, 250);
+  }, 150);
 });
 
 const filteredPosts = computed(() => {
