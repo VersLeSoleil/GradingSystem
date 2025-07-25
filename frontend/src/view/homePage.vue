@@ -214,6 +214,10 @@ const handleLogout = () => {
   // 跳转到登录页
   router.push('/login')
 }
+function showUserInfo() {
+  console.log('userInfoRef:', userInfoRef.value)
+  userInfoRef.value.openDialog()
+}
 
 async function getAllposts() {
   try {
@@ -318,10 +322,7 @@ async function goToPostDetail(post) {
 }
 
 const userInfoRef = ref(null)
-function showUserInfo() {
-  console.log('userInfoRef:', userInfoRef.value)
-  userInfoRef.value.openDialog()
-}
+
 
 // 发帖弹窗逻辑
 const dialogVisible = ref(false)

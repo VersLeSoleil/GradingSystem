@@ -1,21 +1,26 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed,watch,onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Delete,ZoomIn} from '@element-plus/icons-vue'
-import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElUpload, ElSelect, ElOption, ElTable, ElTableColumn, ElMessage } from 'element-plus'
+import { Delete,ZoomIn, ArrowDown,MoreFilled} from '@element-plus/icons-vue'
+import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTour, ElUpload, ElSelect, ElOption, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import logoImg from '@/assets/logo.png'
-import { ArrowDown } from '@element-plus/icons-vue';
 import axios from 'axios'
+import UserInfo from '@/view/components/userInfo.vue'
 import { useUserStore } from '@/store/user'
-import UserInfo from './components/userInfo.vue'
-const userStore = useUserStore()
 const router = useRouter()
+const userStore = useUserStore()
 const username = userStore.userInfo.UserName
+const open = ref(true)
+const ref1 = ref()
+const ref2 = ref()
+const ref3 = ref()
+const ref4 = ref()
+const userInfoRef = ref(null)
 // 顶部导航菜单
 const navMenus = [
   { index: '/home', label: '模型广场' },
   { index: '/aichat', label: 'ai助手' },
-  { index: '/my-model', label: '在线分级' },
+  { index: '/my-model', label: '在线训练' },
 ]
 const activeMenu = ref('/my-model')
 function handleMenuSelect(index) {
@@ -23,11 +28,21 @@ function handleMenuSelect(index) {
   router.push(index)
 }
 
-const userInfoRef = ref(null)
-function showUserInfo() {
-  console.log('userInfoRef:', userInfoRef.value)
-  userInfoRef.value.openDialog()
-}
+onMounted(() => {
+  if (!localStorage.getItem('tour_shown')) {
+    open.value = true
+  } else {
+    open.value = false
+  }
+})
+
+// 监听 open 变化，关闭时设置标记
+watch(open, (val) => {
+  if (!val) {
+    localStorage.setItem('tour_shown', '1')
+  }
+})
+
 // 可选模型列表
 const models = [
   { value: '1', label: '随机森林+逻辑回归', desc: '随机森林搭配逻辑回归模型的综合性解决方案' },
@@ -37,17 +52,82 @@ const models = [
   { value: '5', label: '肺结节检测', desc: '肺结节分级与检测一体化模型' },
 ]
 const selectedModel = ref(models[0].value)
-
+const handleCommand = async (command) => {
+  switch(command) {
+    case 'editProfile':
+      showUserInfo()
+      break
+    case 'logout':
+      await handleLogout()
+      break
+  }
+}
+function showUserInfo() {
+  console.log('userInfoRef:', userInfoRef.value)
+  userInfoRef.value.openDialog()
+}
+const handleLogout = () => {
+  // 清除本地存储的 token 和用户信息
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user')
+  // 如果有 Pinia/Vuex 用户信息，也要清空
+  userStore.$reset && userStore.$reset()
+  // 跳转到登录页
+  router.push('/login')
+}
 // 上传文件
-const fileList = ref([])
+const imageList = ref([])
+const maskList = ref([])
+
+function getMaskNameFromImageName(imageName) {
+  const dotIndex = imageName.lastIndexOf('.')
+  if (dotIndex === -1) return imageName + '_mask' // 没有扩展名
+  const nameWithoutExt = imageName.substring(0, dotIndex)
+  const ext = imageName.substring(dotIndex)
+  return nameWithoutExt + '_mask' + ext
+}
+
 const handleUploadSuccess = async () => {
-  if (fileList.value.length === 0) {
+  if (imageList.value.length === 0) {
     ElMessage.warning('请先上传至少一张图片')
     return
   }
+
   const formData = new FormData()
-  fileList.value.forEach(file => {
-    formData.append('files', file.raw)  // 假设后端接收字段名为 "files"
+
+  const pairs = []
+
+  imageList.value.forEach(imageFile => {
+    const imageName = imageFile.name
+    const expectedMaskName = getMaskNameFromImageName(imageName)
+
+    // 在 maskList 中查找匹配的掩膜
+    const matchedMask = maskList.value.find(maskFile => maskFile.name === expectedMaskName)
+
+    if (!matchedMask) {
+      console.warn(`未找到 ${imageName} 对应的掩膜 ${expectedMaskName}`)
+      // 你可以选择跳过这一对，或者报错提醒
+      ElMessage.warning(`未找到 ${imageName} 对应的掩膜`)
+      return
+    }
+
+    // 收集 pair，供上传
+    pairs.push({ image: imageFile.raw, mask: matchedMask.raw })
+  })
+
+  if (pairs.length === 0) {
+    ElMessage.warning('没有匹配成功的图像-掩膜对')
+    return
+  }
+
+  // 将每个 pair 添加到 formData 中（可按序号命名）
+  pairs.forEach((pair, index) => {
+    formData.append(`images`, pair.image)
+    formData.append(`masks`, pair.mask)
+    // 或者你想用更结构化的字段名：
+    // formData.append(`pair_${index}_image`, pair.image)
+    // formData.append(`pair_${index}_mask`, pair.mask)
   })
 
   try {
@@ -67,38 +147,15 @@ const handleUploadSuccess = async () => {
   }
 }
 
-const handleCommand = async (command) => {
-  switch(command) {
-    case 'editProfile':
-      showUserInfo()
-      break
-    case 'logout':
-      await handleLogout()
-      break
-  }
-}
-const handleLogout = () => {
-  // 清除本地存储的 token 和用户信息
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-  localStorage.removeItem('user')
-  // 如果有 Pinia/Vuex 用户信息，也要清空
-  userStore.$reset && userStore.$reset()
-  // 跳转到登录页
-  router.push('/login')
-}
-const handleRemove = (file, uploadFiles) => {
-  // 只处理 el-upload 的 on-remove 事件
-  if (uploadFiles) {
-    fileList.value = uploadFiles.slice()
-  }
-}
 
-const uploadRef = ref(null)
-function triggerUploadRemove(file) {
-  if (uploadRef.value && uploadRef.value.handleRemove) {
-    uploadRef.value.handleRemove(file)
-  }
+const handleRemove = (file, uploadFiles) => {
+  console.log(file, uploadFiles);
+  // 你可以在这里添加自定义删除逻辑
+  // 例如：
+  // const index = uploadFiles.findIndex(f => f.uid === file.uid);
+  // if (index !== -1) {
+  //   uploadFiles.splice(index, 1);
+  // }
 }
 
 // 模型简介
@@ -156,7 +213,6 @@ const resultTable = ref([
       </el-menu-item>
     </el-menu>
   </div>
-      
       <el-dropdown @command="handleCommand">
       <el-button type="primary" @click="handleLoginClick" class="user-info-button">
         {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -184,11 +240,11 @@ const resultTable = ref([
               <div style="font-size: 16px; font-weight: bold;">{{ modelTitle }}</div>
               <div style="color: #888; margin-top: 4px;">{{ modelDesc }}</div>
             </div>
-            <el-button type="primary" style="margin-top: 15px; margin-left:500px;"  @click="handleUploadSuccess">开始预测</el-button>
+            <el-button type="primary" style="margin-top: 15px; margin-left:500px;"  @click="handleUploadSuccess" ref="ref3">开始预测</el-button>
           </el-card>
           
           <!-- 结果预览卡片 -->
-          <el-card shadow="hover" style="flex: 2;">
+          <el-card shadow="hover" style="flex: 2;" ref="ref4">
             <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">模型预测结果</div>
             <el-table :data="resultTable" style="width: 100%; height: calc(100% - 40px);">
               <el-table-column prop="id" label="#" width="60" />
@@ -202,13 +258,13 @@ const resultTable = ref([
         <!-- 右侧上传区域 (1/2宽度) -->
         <div style="flex: 1;">
           
-          <el-card shadow="hover" style="height: 100%;">
+          <el-card shadow="hover" style="height: 50%;">
             <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">上传超声影像</div>
             <div style="max-height: 500px; overflow-y: auto; padding-right: 4px;">
             
               <el-upload
-              ref="uploadRef"
-              v-model:file-list="fileList"
+              ref="ref1"
+              v-model:file-list="imageList"
               action="#"
               :auto-upload="false"
               :multiple="true"
@@ -220,7 +276,7 @@ const resultTable = ref([
             >           
               <span style="font-size:60px;font-weight: lighter; color:gray">+</span>             
               <template #file="{ file }">
-                <div class="uploaded-file" style="position:relative;">
+                <div class="uploaded-file">
                   <img
                     v-if="file.raw.type.includes('image')"
                     :src="file.url ? file.url : URL.createObjectURL(file.raw)"
@@ -230,14 +286,45 @@ const resultTable = ref([
                   <el-icon v-else class="uploaded-file-icon"><Document /></el-icon>
                   <span class="uploaded-file-name">{{ file.name }}</span>
                   <span class="uploaded-file-actions">
-                    <el-icon @click.stop="handlePreview(file)"><ZoomIn /></el-icon>
+                    <el-icon @click="handlePreview(file)"><ZoomIn /></el-icon>
+                    <el-icon @click="handleRemove(file)"><Delete /></el-icon>
                   </span>
-                  <!-- 右上角删除按钮 -->
-                  <el-icon
-                    style="position:absolute;top:4px;right:4px;cursor:pointer;color:#f56c6c;z-index:2;"
-                    @click.stop="triggerUploadRemove(file)"
-                    title="删除"
-                  ><Delete /></el-icon>
+                </div>
+              </template>
+            </el-upload>
+            </div>
+          </el-card>
+          <el-card shadow="hover" style="height: 50%;">
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">上传掩膜</div>
+            <div style="max-height: 500px; overflow-y: auto; padding-right: 4px;">
+            
+              <el-upload
+              ref="ref2"
+              v-model:file-list="maskList"
+              action="#"
+              :auto-upload="false"
+              :multiple="true"
+              list-type="picture-card"
+              :on-change="handleChange"
+              :on-remove="handleRemove"
+              class="custom-uploader"
+              style="height: calc(100% - 60px);"
+            >           
+              <span style="font-size:60px;font-weight: lighter; color:gray">+</span>             
+              <template #file="{ file }">
+                <div class="uploaded-file">
+                  <img
+                    v-if="file.raw.type.includes('image')"
+                    :src="file.url ? file.url : URL.createObjectURL(file.raw)"
+                    class="uploaded-image"
+                    alt=""
+                  />
+                  <el-icon v-else class="uploaded-file-icon"><Document /></el-icon>
+                  <span class="uploaded-file-name">{{ file.name }}</span>
+                  <span class="uploaded-file-actions">
+                    <el-icon @click="handlePreview(file)"><ZoomIn /></el-icon>
+                    <el-icon @click="handleRemove(file)"><Delete /></el-icon>
+                  </span>
                 </div>
               </template>
             </el-upload>
@@ -247,6 +334,23 @@ const resultTable = ref([
       </div>
     </el-main>
   </el-container>
+  <el-tour v-model="open">
+    <el-tour-step :target="ref1?.$el" title="在此上传原始超声影像,仅支持jpg格式">
+    </el-tour-step>
+    <el-tour-step
+      :target="ref2?.$el"
+      title="在此上传掩膜，注意命名格式需为原图名加上后缀 _mask，仅支持jpg格式"
+    />
+    <el-tour-step
+      :target="ref3?.$el"
+      title="点击此按钮开始预测分级结果"
+    />
+    <el-tour-step
+      :target="ref4?.$el"
+      title="在此查看预测结果"
+      description="结果以表格形式呈现"
+    />
+  </el-tour>
   <UserInfo ref="userInfoRef" />
 </template>
 
@@ -254,11 +358,11 @@ const resultTable = ref([
 .user-info-button{
   color:#cf5454;
   font-size:15px;
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  outline: none;
+  border: none;          /* 移除边框 */
+  background: none;      /* 移除背景 */
+  padding: 0;            /* 移除内边距 */
+  cursor: pointer;       /* 保持手型指针 */
+  outline: none;         /* 移除聚焦时的轮廓线 */
 }
 .search-section {
   background: #f9f9f9;
@@ -450,14 +554,4 @@ const resultTable = ref([
   object-position: center; /* 居中显示 */
   background-color: #f5f5f5; /* 添加背景色填充空白区域 */
 }
-.user-info-button{
-  color:#cf5454;
-  font-size:15px;
-  border: none;          /* 移除边框 */
-  background: none;      /* 移除背景 */
-  padding: 0;            /* 移除内边距 */
-  cursor: pointer;       /* 保持手型指针 */
-  outline: none;         /* 移除聚焦时的轮廓线 */
-}
-
 </style>

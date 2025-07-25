@@ -103,7 +103,7 @@ func GetAllPosts() ([]structTypes.Post, error) {
 }
 
 func GetCommentsByPostID(postID int) ([]structTypes.Comment, error) {
-	query := `SELECT comment_id, post_id, user_name, content, comment_time FROM comment_table WHERE post_id = ?`
+	query := `SELECT comment_id, post_id, user_name, content, comment_time FROM post_comment_table WHERE post_id = ?`
 	rows, err := DB.Query(query, postID)
 	if err != nil {
 		return nil, fmt.Errorf("获取帖子评论失败: %w", err)
@@ -122,7 +122,7 @@ func GetCommentsByPostID(postID int) ([]structTypes.Comment, error) {
 }
 
 func AddCommentToPost(comment structTypes.Comment) error {
-	query := `INSERT INTO comment_table (post_id, user_name, content, comment_time) VALUES (?, ?, ?, ?)`
+	query := `INSERT INTO post_comment_table (post_id, user_name, content, comment_time) VALUES (?, ?, ?, ?)`
 	_, err := DB.Exec(query, comment.PostID, comment.UserName, comment.Content, time.Now())
 	if err != nil {
 		return fmt.Errorf("添加评论失败: %w", err)
@@ -131,7 +131,7 @@ func AddCommentToPost(comment structTypes.Comment) error {
 }
 
 func DeleteCommentByID(commentID int) error {
-	query := `DELETE FROM comment_table WHERE comment_id = ?`
+	query := `DELETE FROM post_comment_table WHERE comment_id = ?`
 	_, err := DB.Exec(query, commentID)
 	if err != nil {
 		return fmt.Errorf("删除评论失败: %w", err)
@@ -140,7 +140,7 @@ func DeleteCommentByID(commentID int) error {
 }
 
 func AddLike(like structTypes.Like) error {
-	query := `INSERT INTO like_table (post_id, user_name, liked_date) VALUES (?, ?, ?)`
+	query := `INSERT INTO post_like_table (post_id, user_name, liked_date) VALUES (?, ?, ?)`
 	_, err := DB.Exec(query, like.PostID, like.UserName, time.Now())
 	if err != nil {
 		return fmt.Errorf("添加点赞失败: %w", err)
@@ -149,7 +149,7 @@ func AddLike(like structTypes.Like) error {
 }
 
 func CancelLike(like structTypes.Like) error {
-	query := `DELETE FROM like_table WHERE post_id = ? AND user_name = ?`
+	query := `DELETE FROM post_like_table WHERE post_id = ? AND user_name = ?`
 	_, err := DB.Exec(query, like.PostID, like.UserName)
 	if err != nil {
 		return fmt.Errorf("取消点赞失败: %w", err)

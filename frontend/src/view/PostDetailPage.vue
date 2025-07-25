@@ -2,13 +2,13 @@
 <script setup>
 import { ref, computed,onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTree, ElButton } from 'element-plus'
+import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTree, ElButton, ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import logoImg from '@/assets/logo.png'
 import bgImage from '@/assets/background.png';
 import MarkdownIt from 'markdown-it'
 import 'github-markdown-css/github-markdown-light.css'
-import { Star } from '@element-plus/icons-vue';
+import { Star,StarFilled } from '@element-plus/icons-vue';
 import UserInfo from '@/view/components/userInfo.vue'
 import { useUserStore } from '@/store/user'
 const userStore = useUserStore()
@@ -26,7 +26,7 @@ const navMenus = [
 ]
 const activeMenu = ref('/home')
 
-const postId = route.query.postid
+const postId = parseInt(route.query.postid)
 const type_name = route.query.type_name
 const content = route.query.content
 const title = route.query.title
@@ -74,36 +74,101 @@ async function toggleLike() {
     likeCount.value++
   }
   liked.value = !liked.value
-  // 可选：后端同步
+  const requestBody = {
+    post_id: postId,
+    user_name: userName,
+    liked_date: new Date().toISOString() // 转为后端可识别的时间格式
+  }
+  const endpoint = 'http://localhost:8888/likePost'
   try {
-    const response = await fetch('http://localhost:8888/updatePost', {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        post_id: postId,
-        likes: likeCount.value,
-        isLiked: liked.value
-      }),
-      credentials: 'include',
+      credentials: 'include', 
+      body: JSON.stringify(requestBody)
     })
-    if (!response.ok) {
-      throw new Error('点赞失败')
+
+    if (response.ok) {
+      const res = await response.json()
+      ElMessage.success(res.message || '点赞成功')
+    } else {
+      const res = await response.json()
+      ElMessage.error(res.message || '点赞失败')
     }
-  } catch (err) {
-    // 回滚本地状态
-    liked.value = !liked.value
-    likeCount.value += liked.value ? 1 : -1
-    alert('点赞失败，请稍后再试')
+  } catch (error) {
+    console.error('点赞请求失败:', error)
+    ElMessage.error('点赞请求异常')
   }
+
 }
 
-onMounted(() => {
+onMounted(async() => {
+  await getAllComments()
   console.log('content:', route.query.content)
   const rawMarkdown = content || `# Hello Markdown!`
   renderedContent.value = md.render(rawMarkdown)
 })
+
+// 讨论区模拟
+const comments = ref([])
+const newComment = ref('')
+async function addComment() {
+  const endpoint = 'http://localhost:8888/addComment'
+  const requestBody = {
+    post_id: postId,
+    user_name: username,
+    content: newComment.value,
+    comment_time: new Date().toISOString() // 转为后端可识别的时间格式
+  }
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(requestBody)
+    })
+    if (response.ok) {
+      const res = await response.json()
+      ElMessage.success(res.message || '评论成功')
+      getAllComments() // 刷新评论列表
+      newComment.value = '' // 清空输入框
+    } else {
+      const res = await response.json()
+      ElMessage.error(res.message || '评论失败')
+    }
+  } catch (error) {
+    console.error('评论请求失败:', error)
+    ElMessage.error('评论请求异常')
+  }
+}
+
+async function getAllComments() {
+  const endpoint = `http://localhost:8888/getComments?post_id=${postId}`
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include' // 如果你涉及到 cookie 认证
+    })
+
+    if (!response.ok) {
+      throw new Error('无法获取评论列表')
+    }
+    const data = await response.json()
+    comments.value = data
+    console.log('获取到的评论列表：', data)
+    console.log('获取到的评论列表：', comments.value)
+  } catch (error) {
+    console.error('获取评论请求失败:', error)
+    ElMessage.error('获取评论请求异常')
+  }
+}
 
 function handleMenuSelect(index) {
   activeMenu.value = index
@@ -114,22 +179,6 @@ function goBack() {
   router.back()
 }
 
-// 讨论区模拟
-const comments = ref([
-  { user: 'Alice', time: '2025-06-28 10:00', content: '这个模型效果很棒！' },
-  { user: 'Bob', time: '2025-06-28 11:20', content: '希望能开源更多数据集。' },
-])
-const newComment = ref('')
-function addComment() {
-  if (newComment.value.trim()) {
-    comments.value.push({
-      user: '你',
-      time: new Date().toLocaleString(),
-      content: newComment.value
-    })
-    newComment.value = ''
-  }
-}
 
 
 function handleSelect(key) {
@@ -206,6 +255,7 @@ function handleSelect(key) {
                 <div class="header-top-row">
                   <span class="custom-header-title">{{ route.query.title }}</span>
                   <el-tag class="type-tag">{{ route.query.type_name }}</el-tag>
+                  <el-tag class="type-tag" type="warning" >{{ route.query.model_types }}</el-tag>
                 </div>
                 
                 <!-- 描述行 -->
@@ -217,7 +267,12 @@ function handleSelect(key) {
                 <div class="header-bottom-row">
                   <div class="likes-container">
                     <button @click="toggleLike"  class="icon-button">
-                      <el-icon :style="liked ? { color: '#f56c6c' } : {}"><Star /></el-icon>
+                      <el-icon v-if="liked" style="color: #f56c6c">
+                          <StarFilled />
+                        </el-icon>
+                        <el-icon v-else>
+                          <Star />
+                        </el-icon>
                     </button>
                     <span class="likes-count">{{ likeCount }}</span>
                   </div>
@@ -233,8 +288,8 @@ function handleSelect(key) {
       <el-card class="model-discuss-card">
         <div style="font-size: 18px; font-weight: bold; margin-bottom: 12px;">讨论区</div>
         <div v-for="(item, idx) in comments" :key="idx" style="margin-bottom: 16px;">
-          <div style="font-weight: bold;">{{ item.user }}</div>
-          <div style="color: #888; font-size: 13px; margin-bottom: 4px;">{{ item.time }}</div>
+          <div style="font-weight: bold;">{{ item.user_name }}</div>
+          <div style="color: #888; font-size: 13px; margin-bottom: 4px;">{{ item.comment_time }}</div>
           <div>{{ item.content }}</div>
         </div>
         <el-input v-model="newComment" type="textarea" rows="2" placeholder="发表你的看法..." style="margin-bottom: 8px;" />
@@ -359,6 +414,7 @@ function handleSelect(key) {
 .likes-container {
   display: flex;
   align-items: center;
+  flex-direction: row;
   gap: 4px;
   color: #f56c6c;
 }
@@ -374,6 +430,7 @@ function handleSelect(key) {
   padding: 0;            /* 移除内边距 */
   cursor: pointer;       /* 保持手型指针 */
   outline: none;         /* 移除聚焦时的轮廓线 */
+  display: flex;
 }
 .likes-count {
   font-size: 14px;
