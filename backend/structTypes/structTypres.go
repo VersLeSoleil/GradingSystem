@@ -80,3 +80,17 @@ type Post struct {
 	IsPublic     bool      `json:"is_public"`
 	Likes        int       `json:"likes"`
 }
+
+type Comment struct {
+	CommentID   int       `json:"comment_id"`
+	PostID      int       `json:"post_id"`
+	UserName    string    `json:"user_name"`
+	Content     string    `json:"content"`
+	CommentTime time.Time `json:"comment_time"`
+}
+
+type Like struct {
+	PostID    int       `json:"post_id"`
+	UserName  string    `json:"user_name"`
+	LikedDate time.Time `json:"liked_date"`
+}

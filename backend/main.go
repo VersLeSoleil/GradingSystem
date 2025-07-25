@@ -17,6 +17,14 @@ func RegisterMux(mux *http.ServeMux) {
 	mux.HandleFunc("/updatePost", function.UpdatePost)
 	mux.HandleFunc("/getPostsByUsername", function.GetPostsByUsername)
 	mux.HandleFunc("/UpdateUserInfo", function.ModifyUserInfo)
+
+	mux.HandleFunc("/getComments", function.GetComments)
+	mux.HandleFunc("/addComment", function.AddComment)
+	mux.HandleFunc("/deleteComment", function.DeleteComment)
+	mux.HandleFunc("/likePost", function.AddLikeToPost)
+	mux.HandleFunc("/cancelLikePost",function.CancelLikePost)
+
+
 }
 
 func initDATABase() {

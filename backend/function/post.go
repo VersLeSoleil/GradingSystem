@@ -214,3 +214,187 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	restful.RespondWithSuccess(w, posts)
 }
+
+
+func GetComments(w http.ResponseWriter, r *http.Request) {
+	restful.SetCorsHeaders(w)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持 GET 请求")
+		return
+	}
+
+	postIDStr := r.URL.Query().Get("post_id")
+	if postIDStr == "" {
+		restful.RespondWithError(w, http.StatusBadRequest, "缺少 post_id 参数")
+		return
+	}
+
+	var postID int
+	if _, err := fmt.Sscanf(postIDStr, "%d", &postID); err != nil {
+		restful.RespondWithError(w, http.StatusBadRequest, "post_id 参数必须为整数")
+		return
+	}
+
+	comments, err := db.GetCommentsByPostID(postID)
+	if err != nil {
+		log.Printf("获取帖子评论失败: %v", err)
+		restful.RespondWithError(w, http.StatusInternalServerError, "获取帖子评论失败")
+		return
+	}
+
+	if len(comments) == 0 {
+		restful.RespondWithError(w, http.StatusNotFound, "没有找到该帖子的评论")
+		return
+	}
+	
+	restful.RespondWithSuccess(w, comments)
+}
+
+func AddComment(w http.ResponseWriter, r *http.Request) {
+	restful.SetCorsHeaders(w)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持 POST 请求")
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("无法读取请求体: %v", err)
+		restful.RespondWithError(w, http.StatusBadRequest, "无法读取请求体")
+		return
+	}
+
+	var comment structTypes.Comment
+	if err := json.Unmarshal(bodyBytes, &comment); err != nil {
+		log.Printf("JSON 解析失败: %v", err)
+		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
+		return
+	}
+
+	if err := db.AddComment(comment); err != nil {
+		log.Printf("添加评论失败: %v", err)
+		restful.RespondWithError(w, http.StatusInternalServerError, "添加评论失败")
+		return
+	}
+
+	restful.RespondWithSuccess(w, "评论添加成功")
+}
+
+func DeleteComment(w http.ResponseWriter, r *http.Request) {
+	restful.SetCorsHeaders(w)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodDelete {
+		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持 DELETE 请求")
+		return
+	}
+
+	commentIDStr := r.URL.Query().Get("comment_id")
+	if commentIDStr == "" {
+		restful.RespondWithError(w, http.StatusBadRequest, "缺少 comment_id 参数")
+		return
+	}
+
+	var commentID int
+	if _, err := fmt.Sscanf(commentIDStr, "%d", &commentID); err != nil {
+		restful.RespondWithError(w, http.StatusBadRequest, "comment_id 参数必须为整数")
+		return
+	}
+
+	if err := db.DeleteCommentByID(commentID); err != nil {
+		log.Printf("删除评论失败: %v", err)
+		restful.RespondWithError(w, http.StatusInternalServerError, "删除评论失败")
+		return
+	}
+
+	restful.RespondWithSuccess(w, "评论删除成功")
+}
+
+func AddLikeToPost(w http.ResponseWriter, r *http.Request) {
+	restful.SetCorsHeaders(w)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持 POST 请求")
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("无法读取请求体: %v", err)
+		restful.RespondWithError(w, http.StatusBadRequest, "无法读取请求体")
+		return
+	}
+
+	var like structTypes.Like
+	if err := json.Unmarshal(bodyBytes, &like); err != nil {
+		log.Printf("JSON 解析失败: %v", err)
+		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
+		return
+	}
+
+	if err := db.AddLike(like); err != nil {
+		log.Printf("添加点赞失败: %v", err)
+		restful.RespondWithError(w, http.StatusInternalServerError, "添加点赞失败")
+		return
+	}
+
+	restful.RespondWithSuccess(w, "点赞成功")
+}
+
+func CancelLikeFromPost(w http.ResponseWriter, r *http.Request) {
+	restful.SetCorsHeaders(w)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method != http.MethodDelete {
+		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持 DELETE 请求")
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("无法读取请求体: %v", err)
+		restful.RespondWithError(w, http.StatusBadRequest, "无法读取请求体")
+		return
+	}
+
+	var like structTypes.Like
+	if err := json.Unmarshal(bodyBytes, &like); err != nil {
+		log.Printf("JSON 解析失败: %v", err)
+		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
+		return
+	}
+
+	if err := db.CancelLike(like); err != nil {
+		log.Printf("取消点赞失败: %v", err)
+		restful.RespondWithError(w, http.StatusInternalServerError, "取消点赞失败")
+		return
+	}
+
+	restful.RespondWithSuccess(w, "取消点赞成功")
+}
+
