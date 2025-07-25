@@ -88,7 +88,7 @@ func GetAllPosts() ([]structTypes.Post, error) {
 	var posts []structTypes.Post
 	for rows.Next() {
 		var p structTypes.Post
-		if err := rows.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Introduction, &p.ModelTypes, &p.Content,
+		if err := rows.Scan(&p.PostID, &p.TypeName, &p.UserName, &p.Title, &p.Introduction, &p.Content, &p.ModelTypes,
 			&p.CreatedDate, &p.UpdatedDate, &p.IsPublic, &p.Likes); err != nil {
 			return nil, fmt.Errorf("扫描帖子数据失败: %w", err)
 		}

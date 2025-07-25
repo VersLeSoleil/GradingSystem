@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed,onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -158,15 +157,16 @@ async function getAllComments() {
     })
 
     if (!response.ok) {
-      throw new Error('无法获取评论列表')
+      // throw new Error('无法获取评论列表')
     }
     const data = await response.json()
-    comments.value = data
-    console.log('获取到的评论列表：', data)
+    // 如果 data 是 null 或 undefined，赋值空数组
+    comments.value = Array.isArray(data) ? data : []
     console.log('获取到的评论列表：', comments.value)
   } catch (error) {
-    console.error('获取评论请求失败:', error)
-    ElMessage.error('获取评论请求异常')
+    // console.error('获取评论请求失败:', error)
+    // 只有真正的异常才弹窗
+    // ElMessage.error('获取评论请求异常')
   }
 }
 

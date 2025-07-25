@@ -1,16 +1,29 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {useUserStore} from '@/store/user';
 //import {axios} from 'axios';
+import logoimg from '@/assets/logo.png'
 
 const username = ref('');
 const password = ref('');
 const router = useRouter();
 const userStore = useUserStore();
 
+const showTitle = ref(false)
+const showForm = ref(false)
+
+onMounted(() => {
+  setTimeout(() => {
+    showTitle.value = true
+  }, 100)
+  setTimeout(() => {
+    showForm.value = true
+  }, 400)
+})
+
 function forgotman() {
-  alert('Please email ssnigdhasiraz22@sirhenryfloyd.co.uk to request a password reset');
+  alert('请发送邮件至425094746@qq.com以申请重置密码');
 }
 
 async function loginBrungle() {
@@ -45,7 +58,7 @@ async function loginBrungle() {
       userStore.setAccessToken(result.access_token)
       userStore.setUserInfo(result.user)
       userStore.print();
-      alert('登录成功！');
+      // alert('登录成功！');
       router.push('/home'); 
     } else {
       // 错误处理
@@ -134,10 +147,16 @@ async function registerUser() {
 
 <template>
   <div id="login-container">
-    <h1 class="login-title">欢迎使用分级喵</h1>
+    <transition name="slide-down">
+      <h1 class="login-title" v-if="showTitle">
+        <img :src="logoimg" style="vertical-align: middle; margin-right: 12px; width: 48px; height: 48px; object-fit: contain; object-position: center; background: none;" />
+        欢迎使用分级喵！
+      </h1>
+    </transition>
     <br>
     <br>
-      <div class="wrapper">
+    <transition name="slide-up">
+      <div class="wrapper" v-if="showForm">
         <form @submit.prevent="loginBrungle">
           <h1>登录</h1>
           <div class="input-box">
@@ -159,6 +178,7 @@ async function registerUser() {
           </div>
         </form>
       </div>
+    </transition>
   </div>
   <el-dialog v-model="registerDialogVisible" title="注册账号" width="400px" :before-close="closeRegisterDialog">
     <div style="display: flex; flex-direction: column; gap: 16px; padding: 8px 0;">
@@ -248,7 +268,7 @@ async function registerUser() {
   font-family: 'Segoe UI', 'Poppins', 'Arial', sans-serif;
   font-weight: 900;
   letter-spacing: 2.5px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   text-shadow: 0 4px 16px rgba(33,150,243,0.18), 0 1px 0 #fff;
   background: linear-gradient(90deg, #2196f3 30%, #4fc3f7 70%);
   -webkit-background-clip: text;
@@ -354,5 +374,44 @@ async function registerUser() {
   #img {
     z-index: -90;
   }
+}
+</style>
+
+<style>
+.slide-down-enter-active, .slide-up-leave-active {
+  transition: all 0.5s ease;
+}
+.slide-down-enter, .slide-up-leave-to /* .slide-up-leave-active in <2.1.8 */ {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+.slide-up-enter-active, .slide-down-leave-active {
+  transition: all 0.5s ease;
+}
+.slide-up-enter, .slide-down-leave-to /* .slide-down-leave-active in <2.1.8 */ {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.slide-down-enter-active {
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-60px);
+}
+.slide-down-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+.slide-up-enter-active {
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(60px);
+}
+.slide-up-enter-to {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

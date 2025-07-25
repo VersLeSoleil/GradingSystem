@@ -56,7 +56,7 @@
         <div class="search-content">
           <h2 class="title">模型广场 - 为您推荐智能分级解决方案</h2>
           <p class="subtitle">发现和分享优质大模型，让诊断更高效</p>
-          <el-input v-model="searchText" placeholder="搜索公共模型..." prefix-icon="el-icon-search" clearable class="search-input" />
+          <el-input v-model="searchText" placeholder="搜索分级方案..." prefix-icon="el-icon-search" clearable class="search-input" />
         </div>
       </transition>
     </div>
@@ -129,10 +129,10 @@
         <el-input v-model="postForm.title" placeholder="标题" />
       </el-form-item>
       <el-form-item label="描述">
-        <el-input v-model="postForm.introduction" placeholder="描述" />
+        <el-input v-model="postForm.introduction" placeholder="描述（15字以内）" maxlength="15" show-word-limit />
       </el-form-item>
       <el-form-item label="模型分类">
-        <el-input v-model="postForm.model_types" placeholder="模型分类" />
+        <el-input v-model="postForm.model_types" placeholder="模型分类（机器学习or深度学习）" />
       </el-form-item>
       <el-form-item label="疾病分类">
       <el-select
@@ -338,7 +338,7 @@ const postForm = ref({
   introduction: '',
   content: '',
   user_name: username || '未登录用户', // 确保后端能接受这个默认值
-  type_name: '默认分类', // 提供默认分类
+  type_name: '全部', // 提供默认分类
   model_types: '', 
   is_public: true // 明确设置
 })

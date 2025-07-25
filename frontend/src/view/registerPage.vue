@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -7,6 +7,13 @@ const router = useRouter();
 const username = ref('');
 const password = ref('');
 const confirmPassword = ref('');
+const showForm = ref(false)
+
+onMounted(() => {
+  setTimeout(() => {
+    showForm.value = true
+  }, 200)
+})
 
 const gotoLogin = () => {
   router.push('/login');
@@ -41,7 +48,11 @@ async function registerUser() {
       alert('注册成功！');
       router.push('/login');
     } else {
-      alert(result.error || '注册失败！');
+      if (result.error && result.error.includes('Duplicate entry')) {
+        alert('该用户名已被注册，请更换用户名');
+      } else {
+        alert(result.error || '注册失败！');
+      }
     }
   } catch (error) {
     alert(error.message);
@@ -51,10 +62,10 @@ async function registerUser() {
 
 <template>
   <div id="login-container">
-    
     <br>
     <br>
-      <div class="wrapper">
+    <transition name="slide-up">
+      <div class="wrapper" v-if="showForm">
         <form @submit.prevent="loginBrungle">
           <h1>创建一个账号</h1>
           <div class="input-box">
@@ -76,6 +87,7 @@ async function registerUser() {
           </div>
         </form>
       </div>
+    </transition>
   </div>
   
 </template>
@@ -258,5 +270,19 @@ async function registerUser() {
   #img {
     z-index: -90;
   }
+}
+</style>
+
+<style>
+.slide-up-enter-active {
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(60px);
+}
+.slide-up-enter-to {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

@@ -174,7 +174,7 @@ const navMenus = [
               <span class="dot"></span>
             </span>
             <template v-else>
-              <div v-if="msg.html" v-html="msg.html"></div>
+              <div style="width: 90%; margin-left: 30px;" v-if="msg.html" v-html="msg.html"></div>
               <div v-else>{{ msg.text }}</div>
             </template>
           </div>
@@ -341,7 +341,7 @@ const navMenus = [
 }
 
 .message-bubble {
-  max-width: 75%;
+  max-width: 50%;
   padding: 12px 16px;
   border-radius: 18px;
   font-size: 15px;
@@ -418,13 +418,10 @@ const navMenus = [
 
 .chat-input {
   flex: 1;
+  border: none !important;
 }
 
-.chat-input :deep(.el-input__inner) {
-  border-radius: 18px;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-}
+
 
 .send-button {
   width: 48px;
