@@ -5,26 +5,29 @@ import (
 	"backend/function"
 	"fmt"
 	"net/http"
+	"backend/jwt"
+	"backend/restful"
 )
 
-func RegisterMux(mux *http.ServeMux) {
 
+func RegisterMux(mux *http.ServeMux) {
+	// 不需要令牌的接口
 	mux.HandleFunc("/login", function.LoginCheck)
 	mux.HandleFunc("/register", function.RegisterUser)
-	mux.HandleFunc("/createPost", function.CreatePost)
-	mux.HandleFunc("/getPosts", function.GetAllPosts)
-	mux.HandleFunc("/getPostByID", function.GetPostByID)
-	mux.HandleFunc("/updatePost", function.UpdatePost)
-	mux.HandleFunc("/getPostsByUsername", function.GetPostsByUsername)
-	mux.HandleFunc("/UpdateUserInfo", function.ModifyUserInfo)
 
-	mux.HandleFunc("/getComments", function.GetComments)
-	mux.HandleFunc("/addComment", function.AddComment)
-	mux.HandleFunc("/deleteComment", function.DeleteComment)
-	mux.HandleFunc("/likePost", function.AddLikeToPost)
-	mux.HandleFunc("/cancelLikePost",function.CancelLikePost)
+	// 需要令牌验证的接口
+	mux.Handle("/createPost", jwt.AuthMiddleware(http.HandlerFunc(function.CreatePost)))
+	mux.Handle("/getPosts", jwt.AuthMiddleware(http.HandlerFunc(function.GetAllPosts)))
+	mux.Handle("/getPostByID", jwt.AuthMiddleware(http.HandlerFunc(function.GetPostByID)))
+	mux.Handle("/updatePost", jwt.AuthMiddleware(http.HandlerFunc(function.UpdatePost)))
+	mux.Handle("/getPostsByUsername", jwt.AuthMiddleware(http.HandlerFunc(function.GetPostsByUsername)))
+	mux.Handle("/UpdateUserInfo", jwt.AuthMiddleware(http.HandlerFunc(function.ModifyUserInfo)))
 
-
+	mux.Handle("/getComments", jwt.AuthMiddleware(http.HandlerFunc(function.GetComments)))
+	mux.Handle("/addComment", jwt.AuthMiddleware(http.HandlerFunc(function.AddComment)))
+	mux.Handle("/deleteComment", jwt.AuthMiddleware(http.HandlerFunc(function.DeleteComment)))
+	mux.Handle("/likePost", jwt.AuthMiddleware(http.HandlerFunc(function.AddLikeToPost)))
+	mux.Handle("/cancelLikePost", jwt.AuthMiddleware(http.HandlerFunc(function.CancelLikePost)))
 }
 
 func initDATABase() {
@@ -33,6 +36,8 @@ func initDATABase() {
 
 }
 
+// ...existing code...
+
 func main() {
 	initDATABase() // 初始化数据库
 
@@ -40,5 +45,6 @@ func main() {
 	RegisterMux(mux)          // 注册路由
 	fmt.Println(db.HashPassword("123"))
 	fmt.Println("Server started at :8888")
-	http.ListenAndServe(":8888", mux) // 启动服务器
+	// 用restful.CorsMiddleware包裹所有接口
+	http.ListenAndServe(":8888", restful.CorsMiddleware(mux)) // 启动服务器
 }

@@ -182,6 +182,7 @@ import { useUserStore } from '@/store/user'
 const userStore = useUserStore()
 const username = userStore.userInfo.UserName
 console.log('当前用户名:', username)
+const token = userStore.accessToken;
 const router = useRouter()
 const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
@@ -227,7 +228,8 @@ async function getAllposts() {
     const response = await fetch('http://localhost:8888/getPosts', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
       },
       credentials: 'include' // 如果你涉及到 cookie 认证
     })

@@ -200,7 +200,7 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持 GET 请求")
 		return
 	}
-
+	
 	posts, err := db.GetAllPosts()
 	if err != nil {
 		log.Printf("获取所有帖子失败: %v", err)

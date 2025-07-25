@@ -9,7 +9,6 @@ const username = ref('');
 const password = ref('');
 const router = useRouter();
 const userStore = useUserStore();
-
 const showTitle = ref(false)
 const showForm = ref(false)
 
@@ -40,6 +39,7 @@ async function loginBrungle() {
       method: method,
       headers: {
         'Content-Type': 'application/json',
+
       },
       body: JSON.stringify(requestBody),
       credentials: 'include', 
