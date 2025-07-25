@@ -12,6 +12,7 @@ import UserInfo from '@/view/components/userInfo.vue'
 import { useUserStore } from '@/store/user'
 const userStore = useUserStore()
 const username = userStore.userInfo.UserName
+const token = userStore.accessToken;
 const userInfoRef = ref(null)
 const router = useRouter()
 const route = useRoute()
@@ -83,7 +84,8 @@ async function toggleLike() {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
       },
       credentials: 'include', 
       body: JSON.stringify(requestBody)
@@ -94,7 +96,7 @@ async function toggleLike() {
       ElMessage.success(res.message || '点赞成功')
     } else {
       const res = await response.json()
-      ElMessage.error(res.message || '点赞失败')
+      // ElMessage.error(res.message || '点赞失败')
     }
   } catch (error) {
     console.error('点赞请求失败:', error)
@@ -125,7 +127,8 @@ async function addComment() {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
       },
       credentials: 'include',
       body: JSON.stringify(requestBody)
@@ -151,7 +154,8 @@ async function getAllComments() {
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
       },
       credentials: 'include' // 如果你涉及到 cookie 认证
     })

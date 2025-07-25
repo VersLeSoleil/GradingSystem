@@ -67,7 +67,7 @@
         <!-- 左侧筛选栏 -->
         <div class="sidebar">
           <div class="sidebar-title">筛选条件</div>
-          <el-menu :default-active="selectedCategory" @select="selectedCategory = $event" class="el-menu-vertical-demo">
+          <el-menu :default-active="selectedCategory.value" @select="handleCategorySelect" class="el-menu-vertical-demo">
             <el-menu-item v-for="cat in categories" :key="cat" :index="cat">
               <el-icon><i class="el-icon-folder" /></el-icon>
               {{ cat }}
@@ -75,8 +75,10 @@
           </el-menu>
         </div>
 
+        <!-- 卡片区域骨架屏 -->
+        <el-skeleton :rows="7" animated v-if="changing" style="margin-bottom: 24px;" />
         <!-- 卡片区域 -->
-        <transition-group name="list-fade" tag="div" class="card-grid">
+        <transition-group name="list-fade" tag="div" class="card-grid" v-else>
           <el-card
             v-for="post in filteredPosts"
             :key="post.post_id"
@@ -168,7 +170,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+function handleCategorySelect(cat) {
+  selectedCategory.value = cat;
+}
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
 import { Star,ArrowDown } from '@element-plus/icons-vue';
@@ -186,6 +191,7 @@ const activeMenu = ref('/home')
 const selectedCategory = ref('全部')
 let posts = ref([])
 const loading = ref(true)
+let changing = ref(false)
 const error = ref(null)
 const navMenus = [
   { index: '/home', label: '模型广场' },
@@ -251,39 +257,15 @@ onMounted(async () => {
 
 
 function handleMenuSelect(index) {
-  activeMenu.value = index
-  router.push(index)
+  changing.value = true;
+  activeMenu.value = index;
+  router.push(index);
+  setTimeout(() => {
+    changing.value = false;
+  }, 250);
 }
 
-async function toggleLike(post) {
-  try{
-    console.log('Toggling like for post:', post.post_id)
-    const endpoint = `http://localhost:8888/updatePost`;
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        post_id: post.post_id,
-        likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-        isLiked: !post.isLiked
-      }),
-      credentials: 'include',
-    });
 
-    if (!response.ok) {
-      throw new Error('更新点赞状态失败');
-    }
-  }catch (error) {
-    console.error('Error toggling like:', error)
-    alert('操作失败，请稍后再试')
-    return
-  }
-  post.isLiked = !post.isLiked
-  post.likes += post.isLiked ? 1 : -1
-  console.log('Post liked:', post)
-}
 async function goToPostDetail(post) {
   try {
     console.log('id:', post.post_id)
@@ -291,6 +273,8 @@ async function goToPostDetail(post) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
+        
       },
       credentials: 'include' // 如果你需要发送 cookie
     })
@@ -399,22 +383,36 @@ async function submitPost() {
 }
 const searchText = ref('')
 
+watch(selectedCategory, () => {
+  changing.value = true;
+  setTimeout(() => {
+    changing.value = false;
+  }, 150);
+});
+
+watch(searchText, () => {
+  changing.value = true;
+  setTimeout(() => {
+    changing.value = false;
+  }, 150);
+});
+
 const filteredPosts = computed(() => {
-  let result = posts.value
+  let result = posts.value;
   if (selectedCategory.value !== '全部') {
-    result = result.filter(m => m.type_name === selectedCategory.value)
+    result = result.filter(m => m.type_name === selectedCategory.value);
   }
   if (searchText.value.trim()) {
-    const keyword = searchText.value.trim().toLowerCase()
+    const keyword = searchText.value.trim().toLowerCase();
     result = result.filter(
       m =>
         m.title.toLowerCase().includes(keyword) ||
         m.introduction.toLowerCase().includes(keyword) ||
         (m.model_types && m.model_types.toLowerCase().includes(keyword))
-    )
+    );
   }
-  return result
-})
+  return result;
+});
 </script>
 
 <style scoped>
@@ -440,9 +438,14 @@ const filteredPosts = computed(() => {
 .main-content {
   display: flex;
   gap: 32px;
+  position: relative;
+  max-height:400px;
 }
 .sidebar {
   width: 220px;
+  position: sticky;
+  align-self: flex-start;
+  z-index: 10;
 }
 .sidebar-title {
   font-weight: bold;
@@ -453,6 +456,9 @@ const filteredPosts = computed(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
+  /* 保证卡片区域可滚动 */
+  overflow-y: auto;
+  max-height: calc(100vh - 160px); /* 视实际页面高度调整 */
 }
 .animated-card {
   transition: all 0.3s ease;
@@ -486,12 +492,20 @@ const filteredPosts = computed(() => {
   opacity: 0;
   transform: translateY(-20px);
 }
-.list-fade-enter-active {
-  transition: all 0.6s ease;
+
+.list-fade-enter-active,
+.list-fade-leave-active {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.list-fade-enter-from {
+.list-fade-enter-from,
+.list-fade-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+.list-fade-leave-from,
+.list-fade-enter-to {
+  opacity: 1;
+  transform: translateY(0);
 }
 .header-bar {
   display: flex;

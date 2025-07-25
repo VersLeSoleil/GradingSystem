@@ -5,6 +5,7 @@ import { ElDialog, ElCard, ElAvatar, ElSkeleton, ElSkeletonItem, ElDivider, ElIn
 import useravatar from '@/assets/user-avatar.png'
 const dialogVisible = ref(false)
 const userStore = useUserStore()
+const token = userStore.accessToken;
 const user = computed(() => {
   const info = userStore.userInfo || {}
   return {
@@ -73,6 +74,7 @@ async function saveIntro() {
     method: method,
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token 
     },
     body: JSON.stringify(requestBody),
     credentials: 'include', 
