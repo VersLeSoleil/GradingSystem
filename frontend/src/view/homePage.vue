@@ -368,45 +368,72 @@ async function getLikeStatusForPost(post) {
 
 // 修改后的 toggleLike 函数，支持传入帖子对象
 async function toggleLike(post) {
-  // 防止重复点击
-  const wasLiked = post.liked;
-  post.liked = !wasLiked;
-  post.likes = wasLiked ? post.likes - 1 : post.likes + 1;
-  
-  const requestBody = {
-    post_id: post.post_id,
-    user_name: username,
-    liked_date: new Date().toISOString()
-  }
-  
-  const endpoint = 'http://localhost:8888/likePost'
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include', 
-      body: JSON.stringify(requestBody)
-    })
+  if(post.liked){
+    const requestBody = {
+      post_id: post.post_id,
+      user_name: username
+    }
+    const endpoint = 'http://localhost:8888/cancelLikePost'
+    try {
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token 
+        },
+        credentials: 'include', 
+        body: JSON.stringify(requestBody)
+      })
 
-    if (response.ok) {
-      const res = await response.json()
-      ElMessage.success(res.message || '操作成功')
-    } else {
-      // 如果请求失败，回滚状态
+      if (response.ok) {
+        const res = await response.json()
+        ElMessage.success(res.message || '取消点赞成功')
+        post.liked = !post.liked
+        post.likes = post.likes - 1; 
+      } else {
+        const res = await response.json()
+        // ElMessage.error(res.message || '取消点赞失败')
+      }
+    } catch (error) {
+      console.error('取消点赞请求失败:', error)
+      ElMessage.error('取消点赞请求异常')
+    }
+  }else{
+    const requestBody = {
+      post_id: post.post_id,
+      user_name: username,
+    }
+    
+    const endpoint = 'http://localhost:8888/likePost'
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token 
+        },
+        credentials: 'include', 
+        body: JSON.stringify(requestBody)
+      })
+
+      if (response.ok) {
+        const res = await response.json()
+        ElMessage.success(res.message || '操作成功')
+        post.liked = !post.liked
+        post.likes = post.likes + 1;
+      } else {
+        // 如果请求失败，回滚状态
+      
+        const res = await response.json()
+        ElMessage.error(res.message || '操作失败')
+      }
+    } catch (error) {
+      console.error('请求失败:', error)
+      // 如果异常，也回滚状态
       post.liked = wasLiked;
       post.likes = wasLiked ? post.likes + 1 : post.likes - 1;
-      const res = await response.json()
-      ElMessage.error(res.message || '操作失败')
+      ElMessage.error('请求异常')
     }
-  } catch (error) {
-    console.error('请求失败:', error)
-    // 如果异常，也回滚状态
-    post.liked = wasLiked;
-    post.likes = wasLiked ? post.likes + 1 : post.likes - 1;
-    ElMessage.error('请求异常')
   }
 }
 

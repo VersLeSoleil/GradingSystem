@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed,onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, routeLocationKey } from 'vue-router'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTree, ElButton, ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import logoImg from '@/assets/logo.png'
@@ -92,43 +92,73 @@ async function getLikeStatus() {
 
 
 async function toggleLike() {
-  // 防止重复点击
-  if (liked.value) {
-    likeCount.value--
-  } else {
-    likeCount.value++
-  }
-  liked.value = !liked.value
-  const requestBody = {
-    post_id: postId,
-    user_name: userName,
-    liked_date: new Date().toISOString() // 转为后端可识别的时间格式
-  }
-  const endpoint = 'http://localhost:8888/likePost'
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include', 
-      body: JSON.stringify(requestBody)
-    })
-
-    if (response.ok) {
-      const res = await response.json()
-      ElMessage.success(res.message || '点赞成功')
-    } else {
-      const res = await response.json()
-      // ElMessage.error(res.message || '点赞失败')
+  console.log('当前点赞状态:', liked.value)
+  if(liked.value){
+    const requestBody = {
+      post_id: postId,
+      user_name: userName
     }
-  } catch (error) {
-    console.error('点赞请求失败:', error)
-    ElMessage.error('点赞请求异常')
-  }
+    const endpoint = 'http://localhost:8888/cancelLikePost'
+    try {
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token 
+        },
+        credentials: 'include', 
+        body: JSON.stringify(requestBody)
+      })
 
+      if (response.ok) {
+        const res = await response.json()
+        ElMessage.success(res.message || '取消点赞成功')
+        liked.value = !liked.value
+        likeCount.value = likeCount.value - 1; 
+      } else {
+        const res = await response.json()
+        // ElMessage.error(res.message || '取消点赞失败')
+      }
+    } catch (error) {
+      console.error('取消点赞请求失败:', error)
+      ElMessage.error('取消点赞请求异常')
+    }
+  }else{
+    
+    const requestBody = {
+      post_id: postId,
+      user_name: userName
+    }
+    const endpoint = 'http://localhost:8888/likePost'
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token 
+        },
+        credentials: 'include', 
+        body: JSON.stringify(requestBody)
+      })
+
+      if (response.ok) {
+        const res = await response.json()
+        ElMessage.success(res.message || '点赞成功')
+        liked.value = !liked.value
+        likeCount.value = likeCount.value + 1;
+      } else {
+        const res = await response.json()
+        // ElMessage.error(res.message || '点赞失败')
+      }
+    } catch (error) {
+      console.error('点赞请求失败:', error)
+      ElMessage.error('点赞请求异常')
+    }
+  }
+  
 }
+
+
 
 onMounted(async() => {
   await getLikeStatus()
