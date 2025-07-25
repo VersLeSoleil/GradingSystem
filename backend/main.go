@@ -28,6 +28,7 @@ func RegisterMux(mux *http.ServeMux) {
 	mux.Handle("/deleteComment", jwt.AuthMiddleware(http.HandlerFunc(function.DeleteComment)))
 	mux.Handle("/likePost", jwt.AuthMiddleware(http.HandlerFunc(function.AddLikeToPost)))
 	mux.Handle("/cancelLikePost", jwt.AuthMiddleware(http.HandlerFunc(function.CancelLikePost)))
+	mux.Hnadel("/CheckLikeStatus", jwt.AuthMiddleware(http.HandlerFunc(function.CheckLikeStatus)))
 }
 
 func initDATABase() {
@@ -36,7 +37,7 @@ func initDATABase() {
 
 }
 
-// ...existing code...
+
 
 func main() {
 	initDATABase() // 初始化数据库
@@ -45,6 +46,5 @@ func main() {
 	RegisterMux(mux)          // 注册路由
 	fmt.Println(db.HashPassword("123"))
 	fmt.Println("Server started at :8888")
-	// 用restful.CorsMiddleware包裹所有接口
 	http.ListenAndServe(":8888", restful.CorsMiddleware(mux)) // 启动服务器
 }
