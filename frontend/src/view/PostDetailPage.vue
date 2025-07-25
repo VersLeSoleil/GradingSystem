@@ -66,6 +66,31 @@ const handleLogout = () => {
 }
 
 // 点赞接口
+
+async function getLikeStatus() {
+  const endpoint = `http://localhost:8888/checkLikeStatus?post_id=${postId}&user_name=${username}`
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
+      },
+      credentials: 'include'
+    })
+    if (response.ok) {
+      const data = await response.json()
+      liked.value = data.liked
+      likeCount.value = data.like_count
+    } else {
+      console.error('获取点赞状态失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('获取点赞状态请求失败:', error)
+  }
+}
+
+
 async function toggleLike() {
   // 防止重复点击
   if (liked.value) {
@@ -106,6 +131,7 @@ async function toggleLike() {
 }
 
 onMounted(async() => {
+  await getLikeStatus()
   await getAllComments()
   console.log('content:', route.query.content)
   const rawMarkdown = content || `# Hello Markdown!`

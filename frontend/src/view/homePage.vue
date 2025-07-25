@@ -94,6 +94,38 @@
               <el-tag size="small" type="warning" style="margin-left:5px">{{ post.model_types }}</el-tag>
               <div class="card-foot" style="display: flex;flex-direction: row;">
                 <div class="likes-container" style="margin-top: 10px;">               
+                  <button @click.stop="toggleLike(post)" class="icon-button">
+                    <!-- 使用帖子对象的 liked 属性 -->
+                    <el-icon v-if="post.liked" style="color: #f56c6c">
+                      <StarFilled />
+                    </el-icon>
+                    <el-icon v-else>
+                      <Star />
+                    </el-icon>
+                  </button>
+                  <span class="likes-count">{{ post.likes }}</span>
+                </div>
+                <div class="card-author" style="margin-left:130px;">{{ post.user_name }}</div>
+              </div>
+            </div>
+          </el-card>
+
+
+          <!-- <el-card
+            v-for="post in filteredPosts"
+            :key="post.post_id"
+            shadow="hover"
+            class="animated-card"
+            @click="goToPostDetail(post)"
+            style="cursor: pointer; width: 300px; height: 200px; display: flex; align-items: center; justify-content: center;"
+          >
+            <div>
+              <div class="card-title">{{ post.title }}</div>
+              <div class="card-desc">{{ post.introduction }}</div>
+              <el-tag size="small" type="success">{{ post.type_name }}</el-tag>
+              <el-tag size="small" type="warning" style="margin-left:5px">{{ post.model_types }}</el-tag>
+              <div class="card-foot" style="display: flex;flex-direction: row;">
+                <div class="likes-container" style="margin-top: 10px;">               
                     <el-icon><Star /></el-icon>            
                   <span class="likes-count">{{ post.likes }}</span>
                 </div>
@@ -101,7 +133,7 @@
               </div>
               
             </div>
-          </el-card>
+          </el-card> -->
         </transition-group>
       </div>
     </el-main>
@@ -176,7 +208,7 @@ function handleCategorySelect(cat) {
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElCard, ElTag, ElMenu, ElMenuItem, ElInput } from 'element-plus'
-import { Star,ArrowDown } from '@element-plus/icons-vue';
+import { Star,StarFilled ,ArrowDown } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png'
 import UserInfo from './components/userInfo.vue'
 import { useUserStore } from '@/store/user'
@@ -226,6 +258,57 @@ function showUserInfo() {
   userInfoRef.value.openDialog()
 }
 
+// async function getLikeStatus() {
+//   const endpoint = `http://localhost:8888/checkLikeStatus?post_id=${postId}&user_name=${username}`
+//   try {
+//     const response = await fetch(endpoint, {
+//       method: 'GET',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': 'Bearer ' + token 
+//       },
+//       credentials: 'include'
+//     })
+//     if (response.ok) {
+//       const data = await response.json()
+//       liked.value = data.liked
+//       likeCount.value = data.like_count
+//     } else {
+//       console.error('获取点赞状态失败:', response.statusText)
+//     }
+//   } catch (error) {
+//     console.error('获取点赞状态请求失败:', error)
+//   }
+// }
+
+// async function getAllposts() {
+//   try {
+//     const response = await fetch('http://localhost:8888/getPosts', {
+//       method: 'GET',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': 'Bearer ' + token 
+//       },
+//       credentials: 'include' // 如果你涉及到 cookie 认证
+//     })
+
+//     if (!response.ok) {
+//       throw new Error('无法获取模型列表')
+//     }
+//     const data = await response.json()
+//     posts.value = data
+//     console.log('获取到的模型列表：', posts.value)
+//   } catch (err) {
+//     console.error('获取模型失败：', err)
+//     error.value = err.message
+//   } finally {
+//     loading.value = false
+//   }
+// }
+
+
+
+// 修改后的 getAllposts 函数
 async function getAllposts() {
   try {
     const response = await fetch('http://localhost:8888/getPosts', {
@@ -234,13 +317,19 @@ async function getAllposts() {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token 
       },
-      credentials: 'include' // 如果你涉及到 cookie 认证
+      credentials: 'include'
     })
 
     if (!response.ok) {
       throw new Error('无法获取模型列表')
     }
     const data = await response.json()
+    
+    // 为每个帖子添加点赞状态
+    for (const post of data) {
+      await getLikeStatusForPost(post);
+    }
+    
     posts.value = data
     console.log('获取到的模型列表：', posts.value)
   } catch (err) {
@@ -250,6 +339,79 @@ async function getAllposts() {
     loading.value = false
   }
 }
+
+// 为单个帖子获取点赞状态的函数
+async function getLikeStatusForPost(post) {
+  const endpoint = `http://localhost:8888/checkLikeStatus?post_id=${post.post_id}&user_name=${username}`
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
+      },
+      credentials: 'include'
+    })
+    if (response.ok) {
+      const data = await response.json()
+      // 将点赞状态添加到帖子对象中
+      post.liked = data.liked
+    } else {
+      console.error('获取点赞状态失败:', response.statusText)
+      post.liked = false
+    }
+  } catch (error) {
+    console.error('获取点赞状态请求失败:', error)
+    post.liked = false
+  }
+}
+
+// 修改后的 toggleLike 函数，支持传入帖子对象
+async function toggleLike(post) {
+  // 防止重复点击
+  const wasLiked = post.liked;
+  post.liked = !wasLiked;
+  post.likes = wasLiked ? post.likes - 1 : post.likes + 1;
+  
+  const requestBody = {
+    post_id: post.post_id,
+    user_name: username,
+    liked_date: new Date().toISOString()
+  }
+  
+  const endpoint = 'http://localhost:8888/likePost'
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token 
+      },
+      credentials: 'include', 
+      body: JSON.stringify(requestBody)
+    })
+
+    if (response.ok) {
+      const res = await response.json()
+      ElMessage.success(res.message || '操作成功')
+    } else {
+      // 如果请求失败，回滚状态
+      post.liked = wasLiked;
+      post.likes = wasLiked ? post.likes + 1 : post.likes - 1;
+      const res = await response.json()
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (error) {
+    console.error('请求失败:', error)
+    // 如果异常，也回滚状态
+    post.liked = wasLiked;
+    post.likes = wasLiked ? post.likes + 1 : post.likes - 1;
+    ElMessage.error('请求异常')
+  }
+}
+
+
+
 
 onMounted(async () => {
   await getAllposts()

@@ -21,14 +21,14 @@ func RegisterMux(mux *http.ServeMux) {
 	mux.Handle("/getPostByID", jwt.AuthMiddleware(http.HandlerFunc(function.GetPostByID)))
 	mux.Handle("/updatePost", jwt.AuthMiddleware(http.HandlerFunc(function.UpdatePost)))
 	mux.Handle("/getPostsByUsername", jwt.AuthMiddleware(http.HandlerFunc(function.GetPostsByUsername)))
-	mux.Handle("/UpdateUserInfo", jwt.AuthMiddleware(http.HandlerFunc(function.ModifyUserInfo)))
+	mux.Handle("/updateUserInfo", jwt.AuthMiddleware(http.HandlerFunc(function.ModifyUserInfo)))
 
 	mux.Handle("/getComments", jwt.AuthMiddleware(http.HandlerFunc(function.GetComments)))
 	mux.Handle("/addComment", jwt.AuthMiddleware(http.HandlerFunc(function.AddComment)))
 	mux.Handle("/deleteComment", jwt.AuthMiddleware(http.HandlerFunc(function.DeleteComment)))
 	mux.Handle("/likePost", jwt.AuthMiddleware(http.HandlerFunc(function.AddLikeToPost)))
 	mux.Handle("/cancelLikePost", jwt.AuthMiddleware(http.HandlerFunc(function.CancelLikePost)))
-	mux.Hnadel("/CheckLikeStatus", jwt.AuthMiddleware(http.HandlerFunc(function.CheckLikeStatus)))
+	mux.Handle("/checkLikeStatus", jwt.AuthMiddleware(http.HandlerFunc(function.CheckLikeStatus)))
 }
 
 func initDATABase() {

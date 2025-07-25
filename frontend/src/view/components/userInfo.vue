@@ -55,7 +55,7 @@ async function saveIntro() {
   userStore.userInfo.Birthday = birthday.value
   
   editing.value = false
-  let endpoint = 'http://localhost:8888/UpdateUserInfo';
+  let endpoint = 'http://localhost:8888/updateUserInfo';
   let method = 'POST';
   let requestBody = {
     user_name: user.value.UserName || '',

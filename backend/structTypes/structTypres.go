@@ -94,3 +94,8 @@ type Like struct {
 	UserName  string    `json:"user_name"`
 	LikedDate time.Time `json:"liked_date"`
 }
+
+type IsLiked struct {
+	Liked    bool `json:"liked"`
+	LikeCount int  `json:"like_count"`
+}

@@ -157,12 +157,13 @@ func CancelLike(like structTypes.Like) error {
 	return nil
 }
 
-func IsLiked(postID int, username string) (bool, error) {
+func IsLiked(postID int, username string) (structTypes.IsLiked, error) {
 	query := `SELECT COUNT(*) FROM post_like_table WHERE post_id = ? AND user_name = ?`
-	var count int
-	err := DB.QueryRow(query, postID, username).Scan(&count)
+	var likestatus structTypes.IsLiked
+	err := DB.QueryRow(query, postID, username).Scan(&likestatus.Liked)
+	err = DB.QueryRow(`SELECT COUNT(*) FROM post_like_table WHERE post_id = ?`, postID).Scan(&likestatus.LikeCount)
 	if err != nil {
-		return false, fmt.Errorf("查询点赞状态失败: %w", err)
+		return structTypes.IsLiked{}, fmt.Errorf("查询点赞状态失败: %w", err)
 	}
-	return count > 0, nil
+	return likestatus, nil
 }

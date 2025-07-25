@@ -399,36 +399,32 @@ func CancelLikePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckLikeStatus(w http.ResponseWriter, r *http.Request){
-	restful.SetCorsHeaders(w)
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	if r.Method != http.MethodGet {
-		restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持检查点赞请求")
-		return
-	}
+    restful.SetCorsHeaders(w)
+    if r.Method == http.MethodOptions {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
+    if r.Method != http.MethodGet {
+        restful.RespondWithError(w, http.StatusMethodNotAllowed, "只支持检查点赞请求")
+        return
+    }
 
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("无法读取请求体: %v", err)
-		restful.RespondWithError(w, http.StatusBadRequest, "无法读取请求体")
-		return
-	}
-
-	var isLiked structTypes.Like
-	if err := json.Unmarshal(bodyBytes, &like); err != nil {
-		log.Printf("JSON 解析失败: %v", err)
-		restful.RespondWithError(w, http.StatusBadRequest, "请求体不是合法的 JSON 格式")
-		return
-	}
-
-	isLiked, err := db.IsLiked(like.PostID, like.UserName)
-	if err != nil {
-		log.Printf("查询点赞状态失败: %v", err)
-		restful.RespondWithError(w, http.StatusInternalServerError, "查询点赞状态失败")
-		return
-	}
-	restful.RespondWithSuccess(w, isLiked)
+    postIDStr := r.URL.Query().Get("post_id")
+    userName := r.URL.Query().Get("user_name")
+    if postIDStr == "" || userName == "" {
+        restful.RespondWithError(w, http.StatusBadRequest, "缺少参数")
+        return
+    }
+    var postID int
+    if _, err := fmt.Sscanf(postIDStr, "%d", &postID); err != nil {
+        restful.RespondWithError(w, http.StatusBadRequest, "post_id 参数必须为整数")
+        return
+    }
+    isLiked, err := db.IsLiked(postID, userName)
+    if err != nil {
+        log.Printf("查询点赞状态失败: %v", err)
+        restful.RespondWithError(w, http.StatusInternalServerError, "查询点赞状态失败")
+        return
+    }
+    restful.RespondWithSuccess(w, isLiked)
 }
-
