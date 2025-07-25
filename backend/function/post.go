@@ -283,7 +283,7 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.AddComment(comment); err != nil {
+	if err := db.AddCommentToPost(comment); err != nil {
 		log.Printf("添加评论失败: %v", err)
 		restful.RespondWithError(w, http.StatusInternalServerError, "添加评论失败")
 		return
@@ -362,7 +362,7 @@ func AddLikeToPost(w http.ResponseWriter, r *http.Request) {
 	restful.RespondWithSuccess(w, "点赞成功")
 }
 
-func CancelLikeFromPost(w http.ResponseWriter, r *http.Request) {
+func CancelLikePost(w http.ResponseWriter, r *http.Request) {
 	restful.SetCorsHeaders(w)
 
 	if r.Method == http.MethodOptions {
