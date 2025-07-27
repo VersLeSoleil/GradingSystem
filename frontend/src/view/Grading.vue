@@ -555,4 +555,20 @@ const resultTable = ref([
   object-position: center; /* 居中显示 */
   background-color: #f5f5f5; /* 添加背景色填充空白区域 */
 }
+
+.uploaded-file-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 4px;
+}
+.uploaded-file-actions .el-icon {
+  cursor: pointer;
+  color: var(--el-color-primary);
+  transition: color 0.3s;
+}
+.uploaded-file-actions .el-icon:hover {
+  color: var(--el-color-primary-dark-2);
+}
 </style>
