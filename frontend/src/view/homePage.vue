@@ -212,6 +212,7 @@ import { Star,StarFilled ,ArrowDown } from '@element-plus/icons-vue';
 import logoImg from '@/assets/logo.png'
 import UserInfo from './components/userInfo.vue'
 import { useUserStore } from '@/store/user'
+import { authorizedFetch } from '@/http/http';
 
 // 在组件中
 const userStore = useUserStore()
@@ -306,13 +307,8 @@ function showUserInfo() {
 // 修改后的 getAllposts 函数
 async function getAllposts() {
   try {
-    const response = await fetch('http://localhost:8888/getPosts', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include'
+    const response = await authorizedFetch('http://localhost:8888/getPosts', {
+      method: 'GET'
     })
 
     if (!response.ok) {
@@ -339,13 +335,8 @@ async function getAllposts() {
 async function getLikeStatusForPost(post) {
   const endpoint = `http://localhost:8888/checkLikeStatus?post_id=${post.post_id}&user_name=${username}`
   try {
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include'
+    const response = await authorizedFetch(endpoint, {
+      method: 'GET'
     })
     if (response.ok) {
       const data = await response.json()
@@ -370,13 +361,8 @@ async function toggleLike(post) {
     }
     const endpoint = 'http://localhost:8888/cancelLikePost'
     try {
-      const response = await fetch(endpoint, {
+      const response = await authorizedFetch(endpoint, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token 
-        },
-        credentials: 'include', 
         body: JSON.stringify(requestBody)
       })
 
@@ -401,13 +387,8 @@ async function toggleLike(post) {
     
     const endpoint = 'http://localhost:8888/likePost'
     try {
-      const response = await fetch(endpoint, {
+      const response = await authorizedFetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token 
-        },
-        credentials: 'include', 
         body: JSON.stringify(requestBody)
       })
 
@@ -453,14 +434,8 @@ function handleMenuSelect(index) {
 async function goToPostDetail(post) {
   try {
     console.log('id:', post.post_id)
-    const response = await fetch(`http://localhost:8888/getPostByID?post_id=${parseInt(post.post_id)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-        
-      },
-      credentials: 'include' // 如果你需要发送 cookie
+    const response = await authorizedFetch(`http://localhost:8888/getPostByID?post_id=${parseInt(post.post_id)}`, {
+      method: 'GET'
     })
 
     if (!response.ok) {
@@ -535,13 +510,9 @@ async function submitPost() {
 }
   let endpoint = 'http://localhost:8888/createPost';
   let method = 'POST';
-  const response = await fetch(endpoint, {
+  const response = await authorizedFetch(endpoint, {
       method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData),
-      credentials: 'include', 
+      body: JSON.stringify(postData)
     });
 
   if (!response.ok) {

@@ -242,16 +242,13 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	comments, err := db.GetCommentsByPostID(postID)
+	
 	if err != nil {
 		log.Printf("获取帖子评论失败: %v", err)
 		restful.RespondWithError(w, http.StatusInternalServerError, "获取帖子评论失败")
 		return
 	}
 
-	if len(comments) == 0 {
-		restful.RespondWithError(w, http.StatusNotFound, "没有找到该帖子的评论")
-		return
-	}
 	
 	restful.RespondWithSuccess(w, comments)
 }

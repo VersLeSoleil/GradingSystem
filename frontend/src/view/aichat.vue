@@ -39,13 +39,7 @@ const handleCommand = async (command) => {
   }
 }
 const handleLogout = () => {
-  // 清除本地存储的 token 和用户信息
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-  localStorage.removeItem('user')
-  // 如果有 Pinia/Vuex 用户信息，也要清空
-  userStore.$reset && userStore.$reset()
-  // 跳转到登录页
+  userStore.logout()
   router.push('/login')
 }
 const userInfoRef = ref(null)
@@ -138,7 +132,7 @@ const navMenus = [
         </el-menu>
       </div>
       <el-dropdown @command="handleCommand">
-      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+      <el-button type="primary"  class="user-info-button">
         {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
       </el-button>
       <template #dropdown>

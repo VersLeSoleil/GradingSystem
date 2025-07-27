@@ -1,13 +1,14 @@
 <script setup>
 import { ref, computed,watch,onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Delete,ZoomIn, ArrowDown,MoreFilled} from '@element-plus/icons-vue'
+import { Delete,ZoomIn, ArrowDown,MoreFilled,Document} from '@element-plus/icons-vue'
 import { ElAvatar, ElCard, ElTag, ElMenu, ElMenuItem, ElInput, ElTour, ElUpload, ElSelect, ElOption, ElTable, ElTableColumn, ElMessage } from 'element-plus'
 import logoImg from '@/assets/logo.png'
-import axios from 'axios'
 import UserInfo from '@/view/components/userInfo.vue'
 import { useUserStore } from '@/store/user'
 import { authorizedFetch } from '@/http/http'
+
+
 const router = useRouter()
 const userStore = useUserStore()
 const username = userStore.userInfo.UserName
@@ -48,11 +49,7 @@ watch(open, (val) => {
 
 // 可选模型列表
 const models = [
-  { value: '1', label: '随机森林+逻辑回归', desc: '随机森林搭配逻辑回归模型的综合性解决方案' },
-  { value: '2', label: 'GoogleNet', desc: '高准确率甲状腺分级AI模型' },
-  { value: '3', label: '乳腺癌辅助诊断', desc: '乳腺癌影像分级智能模型' },
-  { value: '4', label: '肝脏肿瘤分级', desc: '肝脏肿瘤分级AI模型' },
-  { value: '5', label: '肺结节检测', desc: '肺结节分级与检测一体化模型' },
+  { value: '1', label: 'EfficientNet', desc: '高准确率的深度学习模型' }
 ]
 const selectedModel = ref(models[0].value)
 const handleCommand = async (command) => {
@@ -214,7 +211,7 @@ const resultTable = ref([])
     </el-menu>
   </div>
       <el-dropdown @command="handleCommand">
-      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+      <el-button type="primary"  class="user-info-button">
         {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
       </el-button>
       <template #dropdown>
@@ -247,7 +244,7 @@ const resultTable = ref([])
           <el-card shadow="hover" style="flex: 2;" ref="ref4">
             <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">模型预测结果</div>
             <el-table :data="resultTable" style="width: 100%; height: calc(100% - 40px);">
-              <el-table-column prop="id" label="#" width="60" />
+              
               <el-table-column prop="filename" label="样本名" />
               <el-table-column prop="class" label="预测分级" />
               <el-table-column prop="confidence" label="置信度" />
@@ -259,7 +256,7 @@ const resultTable = ref([])
         <div style="flex: 1;">
           
           <el-card shadow="hover" style="height: 50%;">
-            <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">上传超声影像</div>
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">上传超声影像(png格式)</div>
             <div style="max-height: 500px; overflow-y: auto; padding-right: 4px;">
             
               <el-upload
@@ -269,7 +266,6 @@ const resultTable = ref([])
               :auto-upload="false"
               :multiple="true"
               list-type="picture-card"
-              :on-change="handleChange"
               :on-remove="handleRemove"
               class="custom-uploader"
               style="height: calc(100% - 60px);"
@@ -292,7 +288,7 @@ const resultTable = ref([])
             </div>
           </el-card>
           <el-card shadow="hover" style="height: 50%;">
-            <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">上传掩膜</div>
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">上传掩膜图像(需命名为原图_mask)</div>
             <div style="max-height: 500px; overflow-y: auto; padding-right: 4px;">
             
               <el-upload
@@ -302,7 +298,6 @@ const resultTable = ref([])
               :auto-upload="false"
               :multiple="true"
               list-type="picture-card"
-              :on-change="handleChange"
               :on-remove="handleRemove"
               class="custom-uploader"
               style="height: calc(100% - 60px);"

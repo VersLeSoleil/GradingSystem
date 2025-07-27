@@ -10,6 +10,7 @@ import 'github-markdown-css/github-markdown-light.css'
 import { Star,StarFilled } from '@element-plus/icons-vue';
 import UserInfo from '@/view/components/userInfo.vue'
 import { useUserStore } from '@/store/user'
+import { authorizedFetch } from '@/http/http'
 const userStore = useUserStore()
 const username = userStore.userInfo.UserName
 const token = userStore.accessToken;
@@ -55,28 +56,16 @@ function showUserInfo() {
 }
 
 const handleLogout = () => {
-  // 清除本地存储的 token 和用户信息
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-  localStorage.removeItem('user')
-  // 如果有 Pinia/Vuex 用户信息，也要清空
-  userStore.$reset && userStore.$reset()
-  // 跳转到登录页
+  userStore.logout()
   router.push('/login')
 }
-
 // 点赞接口
 
 async function getLikeStatus() {
   const endpoint = `http://localhost:8888/checkLikeStatus?post_id=${postId}&user_name=${username}`
   try {
-    const response = await fetch(endpoint, {
+    const response = await authorizedFetch(endpoint, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include'
     })
     if (response.ok) {
       const data = await response.json()
@@ -100,13 +89,8 @@ async function toggleLike() {
     }
     const endpoint = 'http://localhost:8888/cancelLikePost'
     try {
-      const response = await fetch(endpoint, {
+      const response = await authorizedFetch(endpoint, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token 
-        },
-        credentials: 'include', 
         body: JSON.stringify(requestBody)
       })
 
@@ -131,13 +115,8 @@ async function toggleLike() {
     }
     const endpoint = 'http://localhost:8888/likePost'
     try {
-      const response = await fetch(endpoint, {
+      const response = await authorizedFetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token 
-        },
-        credentials: 'include', 
         body: JSON.stringify(requestBody)
       })
 
@@ -180,13 +159,8 @@ async function addComment() {
     comment_time: new Date().toISOString() // 转为后端可识别的时间格式
   }
   try {
-    const response = await fetch(endpoint, {
+    const response = await authorizedFetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include',
       body: JSON.stringify(requestBody)
     })
     if (response.ok) {
@@ -207,13 +181,8 @@ async function addComment() {
 async function getAllComments() {
   const endpoint = `http://localhost:8888/getComments?post_id=${postId}`
   try {
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token 
-      },
-      credentials: 'include' // 如果你涉及到 cookie 认证
+    const response = await authorizedFetch(endpoint, {
+      method: 'GET'
     })
 
     if (!response.ok) {
@@ -286,7 +255,7 @@ function handleSelect(key) {
   </div>
       
       <el-dropdown @command="handleCommand">
-      <el-button type="primary" @click="handleLoginClick" class="user-info-button">
+      <el-button type="primary"  class="user-info-button">
         {{ username }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
       </el-button>
       <template #dropdown>
@@ -308,7 +277,7 @@ function handleSelect(key) {
       <!-- 1. 模型简介 -->
       <el-card style="width: 80%;margin: 0 auto;">
         <div class="card-header">
-          <el-page-header @back="goBack" :title="首页" class="custom-page-header">
+          <el-page-header @back="goBack" class="custom-page-header">
             <template #content>
               <div class="header-content-wrapper">
                 <!-- 标题行 -->
@@ -352,7 +321,7 @@ function handleSelect(key) {
           <div style="color: #888; font-size: 13px; margin-bottom: 4px;">{{ item.comment_time }}</div>
           <div>{{ item.content }}</div>
         </div>
-        <el-input v-model="newComment" type="textarea" rows="2" placeholder="发表你的看法..." style="margin-bottom: 8px;" />
+        <el-input v-model="newComment" type="textarea" :rows="2" placeholder="发表你的看法..." style="margin-bottom: 8px;" />
         <el-button type="primary" @click="addComment">发表评论</el-button>
       </el-card>
     </el-main>
