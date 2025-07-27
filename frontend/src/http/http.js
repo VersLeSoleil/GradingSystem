@@ -5,9 +5,13 @@ export async function authorizedFetch(url, options = {}) {
   const userStore = useUserStore();
 
   const defaultHeaders = {
-    'Content-Type': 'application/json',
     'Authorization': `Bearer ${userStore.accessToken}` 
   };
+
+  if (options.body && !(options.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+  
   const finalOptions = {
     ...options,
     headers: {

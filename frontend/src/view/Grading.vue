@@ -122,29 +122,30 @@ const handleUploadSuccess = async () => {
   pairs.forEach((pair, index) => {
     formData.append(`images`, pair.image)
     formData.append(`masks`, pair.mask)
-    // 或者你想用更结构化的字段名：
-    // formData.append(`pair_${index}_image`, pair.image)
-    // formData.append(`pair_${index}_mask`, pair.mask)
   })
 
   try {
-    const endpoint = 'http://127.0.0.1:8888/predict'
+    const endpoint = 'http://localhost:8888/predict'
     const method = 'POST'
     const response = await authorizedFetch(endpoint, {
-      method,
-      body: formData
+      method:method,
+      body: formData,
     })
     if (response.ok) {
-      resultTable.value = response.data.results  // 假设后端返回的是 { results: [{ name, result, score }] }
-      ElMessage.success('预测完成！')
+      const data = await response.json();
+      resultTable.value = data.results;
+      ElMessage.success('预测完成！');
+      console.log('预测结果:', data.results);
+    } else {
+      const errorData = await response.json();
+      console.error('预测失败:', errorData);
+      ElMessage.error(`预测失败: ${errorData.message || '未知错误'}`);
     }
-    else {
-      const errorData = await response.json()
-      ElMessage.error(`预测失败: ${errorData.message || '未知错误'}`)
-    }
+
+
   } catch (error) {
-    console.error('上传或预测失败:', error)
-    ElMessage.error('上传失败，请重试')
+    console.error('上传或预测失败:', error);
+    ElMessage.error('上传失败，请重试');
   }
 }
 
@@ -170,11 +171,8 @@ const modelTitle = computed(() => {
   return m ? m.label : ''
 })
 
-// 预测结果表格（示例数据）
-const resultTable = ref([
-  { id: 1, name: '样本1', result: '良性', score: 0.92 },
-  { id: 2, name: '样本2', result: '恶性', score: 0.81 },
-])
+// 预测结果表格
+const resultTable = ref([])
 </script>
 
 <template>
@@ -250,9 +248,9 @@ const resultTable = ref([
             <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">模型预测结果</div>
             <el-table :data="resultTable" style="width: 100%; height: calc(100% - 40px);">
               <el-table-column prop="id" label="#" width="60" />
-              <el-table-column prop="name" label="样本名" />
-              <el-table-column prop="result" label="预测分级" />
-              <el-table-column prop="score" label="置信度" />
+              <el-table-column prop="filename" label="样本名" />
+              <el-table-column prop="class" label="预测分级" />
+              <el-table-column prop="confidence" label="置信度" />
             </el-table>
           </el-card>
         </div>
