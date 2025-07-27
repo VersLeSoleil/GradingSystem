@@ -149,14 +149,15 @@ const handleUploadSuccess = async () => {
 }
 
 
-const handleRemove = (file, uploadFiles) => {
-  console.log(file, uploadFiles);
-  // 你可以在这里添加自定义删除逻辑
-  // 例如：
-  // const index = uploadFiles.findIndex(f => f.uid === file.uid);
-  // if (index !== -1) {
-  //   uploadFiles.splice(index, 1);
-  // }
+const handleRemove = (file) => {
+  const index = imageList.value.findIndex(f => f.uid === file.uid);
+  if (index !== -1) {
+    imageList.value.splice(index, 1);
+  }
+  const maskIndex = maskList.value.findIndex(f => f.uid === file.uid);
+  if (maskIndex !== -1) {
+    maskList.value.splice(maskIndex, 1);
+  }
 }
 
 // 模型简介
@@ -286,10 +287,7 @@ const resultTable = ref([
                   />
                   <el-icon v-else class="uploaded-file-icon"><Document /></el-icon>
                   <span class="uploaded-file-name">{{ file.name }}</span>
-                  <span class="uploaded-file-actions">
-                    <el-icon @click="handlePreview(file)"><ZoomIn /></el-icon>
-                    <el-icon @click="handleRemove(file)"><Delete /></el-icon>
-                  </span>
+                  <button class="delete-button" @click="handleRemove(file)">删除</button>
                 </div>
               </template>
             </el-upload>
@@ -322,10 +320,7 @@ const resultTable = ref([
                   />
                   <el-icon v-else class="uploaded-file-icon"><Document /></el-icon>
                   <span class="uploaded-file-name">{{ file.name }}</span>
-                  <span class="uploaded-file-actions">
-                    <el-icon @click="handlePreview(file)"><ZoomIn /></el-icon>
-                    <el-icon @click="handleRemove(file)"><Delete /></el-icon>
-                  </span>
+                  <button class="delete-button" @click="handleRemove(file)">删除</button>
                 </div>
               </template>
             </el-upload>
@@ -562,6 +557,8 @@ const resultTable = ref([
   justify-content: center;
   align-items: center;
   margin-top: 4px;
+  border: 1px solid red; /* 调试用边框 */
+  background-color: yellow; /* 调试用背景色 */
 }
 .uploaded-file-actions .el-icon {
   cursor: pointer;
@@ -570,5 +567,27 @@ const resultTable = ref([
 }
 .uploaded-file-actions .el-icon:hover {
   color: var(--el-color-primary-dark-2);
+}
+.uploaded-file {
+  position: relative;
+}
+.uploaded-file:hover .delete-button {
+  display: block;
+}
+.delete-button {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: var(--el-color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.delete-button:hover {
+  background-color: var(--el-color-primary-dark-2);
 }
 </style>
