@@ -7,6 +7,7 @@ import logoImg from '@/assets/logo.png'
 import axios from 'axios'
 import UserInfo from '@/view/components/userInfo.vue'
 import { useUserStore } from '@/store/user'
+import { authorizedFetch } from '@/http/http'
 const router = useRouter()
 const userStore = useUserStore()
 const username = userStore.userInfo.UserName
@@ -27,6 +28,8 @@ function handleMenuSelect(index) {
   activeMenu.value = index
   router.push(index)
 }
+
+
 
 onMounted(() => {
   if (!localStorage.getItem('tour_shown')) {
@@ -67,13 +70,7 @@ function showUserInfo() {
   userInfoRef.value.openDialog()
 }
 const handleLogout = () => {
-  // 清除本地存储的 token 和用户信息
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-  localStorage.removeItem('user')
-  // 如果有 Pinia/Vuex 用户信息，也要清空
-  userStore.$reset && userStore.$reset()
-  // 跳转到登录页
+  userStore.logout()
   router.push('/login')
 }
 // 上传文件
@@ -131,16 +128,20 @@ const handleUploadSuccess = async () => {
   })
 
   try {
-    const response = await axios.post('http://127.0.0.1:8888/predict', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const endpoint = 'http://127.0.0.1:8888/predict'
+    const method = 'POST'
+    const response = await authorizedFetch(endpoint, {
+      method,
+      body: formData
     })
-
-    // 
-    resultTable.value = response.data.results  // 假设后端返回的是 { results: [{ name, result, score }] }
-    ElMessage.success('预测完成！')
-
+    if (response.ok) {
+      resultTable.value = response.data.results  // 假设后端返回的是 { results: [{ name, result, score }] }
+      ElMessage.success('预测完成！')
+    }
+    else {
+      const errorData = await response.json()
+      ElMessage.error(`预测失败: ${errorData.message || '未知错误'}`)
+    }
   } catch (error) {
     console.error('上传或预测失败:', error)
     ElMessage.error('上传失败，请重试')
