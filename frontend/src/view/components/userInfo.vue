@@ -1,11 +1,13 @@
+
 <script setup>
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/store/user'
 import { ElDialog, ElCard, ElAvatar, ElSkeleton, ElSkeletonItem, ElDivider, ElInput, ElButton, ElMessage } from 'element-plus'
 import useravatar from '@/assets/user-avatar.png'
+import { authorizedFetch } from '@/http/http'
+
 const dialogVisible = ref(false)
 const userStore = useUserStore()
-const token = userStore.accessToken;
 const user = computed(() => {
   const info = userStore.userInfo || {}
   return {
@@ -70,14 +72,9 @@ async function saveIntro() {
     role: user.value.Role || '',
     email: user.value.Email || ''
   };
-  const response = await fetch(endpoint, {
+  const response = await authorizedFetch(endpoint, {
     method: method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token 
-    },
     body: JSON.stringify(requestBody),
-    credentials: 'include', 
   });
   if (response.ok) {
     ElMessage.success('个人简介已更新')
@@ -89,6 +86,7 @@ async function saveIntro() {
 defineExpose({ openDialog})
 
 </script>
+
 <template>
   <el-dialog
     v-model="dialogVisible"
@@ -103,7 +101,7 @@ defineExpose({ openDialog})
 
       <div class="profile-content">
         <div class="profile-header">
-          <el-avatar :src="useravatar || ''" size="80px" />
+          <el-avatar :src="useravatar || ''" size=default />
           <div class="profile-meta">
             <div class="name">{{ user.UserName || '未命名用户' }}</div>
             <div class="email">{{ user.Email || '暂无邮箱' }}</div>
@@ -120,7 +118,6 @@ defineExpose({ openDialog})
               v-model="birthday"
               type="date"
               placeholder="选择您的生日"
-              :size="size"
             />
         </div>
         <div class="intro-section">
@@ -133,7 +130,7 @@ defineExpose({ openDialog})
           <div class="intro-section">
           <div class="intro-label">手机号</div>
           <div v-if="!editing" class="number-content">{{ user.Phone || '无' }}</div>
-          <el-input v-else v-model="editNumber" type="textarea" rows="2" placeholder="电话号码" />
+          <el-input v-else v-model="editNumber" type="textarea" rows=2 placeholder="电话号码" />
         </div>
           
         </div>
@@ -147,7 +144,7 @@ defineExpose({ openDialog})
         </div>
 
         <div class="btn-area">
-          <el-button v-if="!editing" type="primary" @click="startEdit" class="edit">编辑简介</el-button>
+          <el-button v-if="!editing" type="primary" @click="startEdit" class="edit">编辑</el-button>
           <el-button v-else type="success" @click="saveIntro" class="edit">保存</el-button>   
           <el-button v-if="!editing" @click="closeDialog" type="danger" class="cancel">关闭</el-button>
           <el-button v-else @click="editing = false" class="cancel">取消</el-button>

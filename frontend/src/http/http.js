@@ -1,4 +1,6 @@
-import { useUserStore } from '@/stores/user'
+
+import { useUserStore } from '@/store/user'
+
 export async function authorizedFetch(url, options = {}) {
   const userStore = useUserStore();
 
@@ -6,7 +8,6 @@ export async function authorizedFetch(url, options = {}) {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${userStore.accessToken}` 
   };
-
   const finalOptions = {
     ...options,
     headers: {
@@ -18,18 +19,15 @@ export async function authorizedFetch(url, options = {}) {
 
   const response = await fetch(url, finalOptions);
 
-
-
-  if (res.status === 401) {
-    const refreshRes = await fetch('http://localhost:8888/refresh', {
+  if (response.status === 401) {
+    const refreshRes = await fetch('http://localhost:8888/refreshToken', {
         method: 'POST',
-        credentials: 'include', // 关键，带上 refresh_token 的 Cookie
+        credentials: 'include', 
     });
 
     if (refreshRes.ok) {
         const newToken = await refreshRes.json();
-        accessToken.value = newToken.access_token;
-
+        userStore.setAccessToken(newToken.accessToken); 
         // 重新发送原请求
         return await authorizedFetch(url, options);
     } else {

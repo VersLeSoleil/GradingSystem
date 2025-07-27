@@ -52,12 +52,12 @@ async function loginBrungle() {
     // 解析响应
     const result = await response.json();
     console.log('Response Data:', result);
-    userStore.print();
+
     // 处理成功与否
     if (response.ok) {
       userStore.setAccessToken(result.access_token)
       userStore.setUserInfo(result.user)
-      userStore.print();
+
       // alert('登录成功！');
       router.push('/home'); 
     } else {
@@ -123,12 +123,12 @@ async function registerUser() {
     // 解析响应
     const result = await response.json();
     console.log('Response Data:', result);
-    userStore.print();
+
     // 处理成功与否
     if (response.ok) {
       userStore.setAccessToken(result.access_token)
       userStore.setUserInfo(result.user)
-      userStore.print();
+
       alert('登录成功！');
       router.push('/home'); 
     } else {

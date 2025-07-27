@@ -62,7 +62,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		http.Error(w, "No refresh token", http.StatusUnauthorized)
@@ -94,3 +94,4 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		"access_token": accessToken,
 	})
 }
+

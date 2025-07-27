@@ -14,6 +14,7 @@ func RegisterMux(mux *http.ServeMux) {
 	// 不需要令牌的接口
 	mux.HandleFunc("/login", function.LoginCheck)
 	mux.HandleFunc("/register", function.RegisterUser)
+	mux.HandleFunc("/logout", function.LogoutHandler)
 
 	// 需要令牌验证的接口
 	mux.Handle("/createPost", jwt.AuthMiddleware(http.HandlerFunc(function.CreatePost)))
@@ -29,6 +30,8 @@ func RegisterMux(mux *http.ServeMux) {
 	mux.Handle("/likePost", jwt.AuthMiddleware(http.HandlerFunc(function.AddLikeToPost)))
 	mux.Handle("/cancelLikePost", jwt.AuthMiddleware(http.HandlerFunc(function.CancelLikePost)))
 	mux.Handle("/checkLikeStatus", jwt.AuthMiddleware(http.HandlerFunc(function.CheckLikeStatus)))
+	mux.Handle("/refreshToken", jwt.AuthMiddleware(http.HandlerFunc(jwt.RefreshToken)))
+	mux.Handle("/predict", jwt.AuthMiddleware(http.HandlerFunc(function.PredictHandler)))
 }
 
 func initDATABase() {

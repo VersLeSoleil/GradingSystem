@@ -75,3 +75,20 @@ func LoginCheck(w http.ResponseWriter, r *http.Request) {
 	log.Printf("用户 %s 登录成功", userL.UserName)
 	restful.RespondWithSuccess(w, resp)
 }
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    // 设置一个过期的 Cookie 删除 refresh_token
+    http.SetCookie(w, &http.Cookie{
+        Name:     "refresh_token",
+        Value:    "",
+        Path:     "/",
+        Domain:   "localhost",
+        MaxAge:   -1,
+        HttpOnly: true,
+        Secure:   false, // 生产环境建议设为 true
+    })
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"message": "logout success"}`))
+}
